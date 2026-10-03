@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>个人职业规划书——{{专业名称}}</title>
+<script src="./echarts.min.js"></script>
+<script>
+  if (typeof echarts === 'undefined') {
+    document.write('<script src="https://cdn.staticfile.net/echarts/5.4.3/echarts.min.js"><\/script>');
+  }
+</script>
+<script>
+  if (typeof echarts === 'undefined') {
+    document.write('<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"><\/script>');
+  }
+</script>
+<!-- ══════════════ 地图模块（可选块：仅当报告含"区域分布"地图时启用） ══════════════
+     标准 4 段式引入，顺序不可颠倒，且必须在 echarts 之后：
+       <script src="./echarts.min.js"></script>          ← 已在上方引入
+       <script src="./china-city-geo.js"></script>       ← window.CHINA_CITY_GEO
+       <script src="./china-province-geo.js"></script>   ← window.CHINA_PROVINCE_GEO（★最易漏！漏引则退回 fetch，file:// 下被 CORS 拦截 → 地图整块空白）
+       <script src="./china-map.js"></script>            ← 提供 ChinaMap.render()
+     正文两处：
+       ① 容器：<div id="mapBox" style="width:100%;height:420px;"></div>
+       ② 调用：ChinaMap.render('mapBox', { data: [ ... ] });   // 自动登记 window.__charts 并带 __chinaMap 标记
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<style>
+  :root, body[data-theme="red"] {
+    --c-title-bar: #8B1A1A; --c-positive: #C0392B; --c-negative: #1E5631;
+    --c-unverified: #9E9E9E; --c-text: #2B2B2B; --c-bg: #FAF7F2; --c-line: #D9D2C7;
+  }
+  body[data-theme="blue"] { --c-title-bar: #1F3A5F; }
+  body[data-theme="green"] { --c-title-bar: #1E5631; }
+  body[data-theme="orange"] { --c-title-bar: #8B4A1A; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: var(--c-bg); color: var(--c-text); line-height: 1.8; max-width: 960px; margin: 0 auto; padding: 32px 40px 64px; }
+  .cover { background: var(--c-title-bar); color: #fff; padding: 44px 40px; border-radius: 8px; margin-bottom: 28px; }
+  .cover h1 { font-size: 30px; letter-spacing: 1px; }
+  .cover .sub { margin-top: 12px; font-size: 14px; opacity: .88; }
+  .summary { background: #fff; border-left: 6px solid var(--c-title-bar); padding: 20px 24px; border-radius: 0 8px 8px 0; margin-bottom: 12px; }
+  h2.section { background: var(--c-title-bar); color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 20px; margin: 44px 0 18px; }
+  h3 { font-size: 16px; margin: 22px 0 10px; border-left: 4px solid var(--c-title-bar); padding-left: 10px; }
+  .card { background: #fff; border-radius: 8px; padding: 20px 24px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.06); break-inside: avoid; }
+  .chart { width: 100%; height: 380px; }
+  .src-note { font-size: 12px; color: #8A8A8A; margin-top: 6px; }
+  .pos { border-left: 5px solid var(--c-positive); }
+  .neg { border-left: 5px solid var(--c-negative); background: #EFF5F0; }
+  .unverified { color: var(--c-unverified); }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 9px; border-radius: 10px; color: #fff; margin-right: 6px; }
+  .tag.pos { background: var(--c-positive); } .tag.neg { background: var(--c-negative); } .tag.mid { background: #D9A441; }
+  table.data { width: 100%; border-collapse: collapse; background: #fff; }
+  table.data th { background: var(--c-title-bar); color: #fff; padding: 8px; font-size: 14px; }
+  table.data td { border-bottom: 1px solid var(--c-line); padding: 8px; font-size: 14px; }
+  td.high { color: var(--c-positive); font-weight: bold; } td.low { color: var(--c-negative); font-weight: bold; }
+  .timeline { position: relative; margin: 24px 0; padding-left: 26px; border-left: 3px solid var(--c-title-bar); }
+  .tl-node { position: relative; margin-bottom: 20px; break-inside: avoid; }
+  .tl-node::before { content: ""; position: absolute; left: -34px; top: 7px; width: 12px; height: 12px; border-radius: 50%; background: var(--c-title-bar); }
+  .tl-node .t { font-weight: bold; color: var(--c-title-bar); }
+  ol.sources { font-size: 13px; background: #fff; padding: 20px 24px 20px 44px; border-radius: 8px; }
+  .toolbar { position: fixed; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 9; }
+  .tool-btn { border: 1px solid var(--c-line); background: #fff; color: var(--c-text); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  .tool-btn.pdf { background: var(--c-title-bar); color: #fff; border-color: var(--c-title-bar); }
+  @media print {
+    /* 页边距为 0：浏览器无页边距空间，不再绘制页眉/页脚（file:/// 路径等）；纸张边距由 body padding 承担 */
+    @page { size: A4; margin: 0; }
+    .toolbar { display: none; }
+    body { padding: 14mm 12mm; max-width: none; background: #fff; }
+    .cover { border-radius: 0; }
+    h2.section { margin: 24px 0 14px; break-after: avoid; }
+    .card { box-shadow: none; margin-bottom: 10px; break-inside: avoid; }
+    .chart { height: 300px; break-inside: avoid; }
+    .timeline { break-inside: avoid; }
+    table.data { break-inside: auto; }
+    table.data tr { break-inside: avoid; }
+    a { color: inherit; text-decoration: none; }
+    #mapBox { width: 88%; margin: 0 auto; }
+  }
+</style>
+</head>
+<body data-theme="red">
+<div class="toolbar">
+  <button class="tool-btn" onclick="var T=['red','blue','green','orange'];document.body.dataset.theme=T[(T.indexOf(document.body.dataset.theme||'red')+1)%4]">切换配色</button>
+  <button class="tool-btn pdf" onclick="window.print()" title="打印对话框中选'另存为 PDF'，边距选'无'，取消勾选'页眉和页脚'（浏览器会记住此设置）">导出 PDF</button>
+</div>
+
+<div class="cover">
+  <h1>个人职业规划书——{{专业名称}}</h1>
+  <div class="sub">规划周期：{{起始年}}-{{结束年}}（3-5 年） ｜ 生成日期：{{日期}} ｜ 由 AI 辅助生成（career-plan-report skill），画像依据见附录</div>
+</div>
+
+<div class="summary">
+  <strong>一句话画像：</strong>{{基于六维画像的一句总结：最强项 + 最短板 + 总体定位。}}<br>
+  <strong>核心策略：</strong>{{一句话概括 3-5 年主线：切入哪个行业赛道、落脚哪类城市、关键跳板是什么。}}
+</div>
+
+<h2 class="section">01 个人能力画像</h2>
+<div class="card">
+  <div id="chartRadar" class="chart"></div>
+  <p class="src-note">评分依据：能力信息问卷（关键题 {{n}} 项），逐维依据见附录《能力画像与机会清单》</p>
+  <h3>画像解读</h3>
+  <p>{{最强项怎么用、最短板怎么补、与专业传统就业方向的匹配度判断。}}</p>
+</div>
+
+<h2 class="section">02 机会清单（城市 × 行业 × 企业 × 岗位）</h2>
+<div class="card">
+  <table class="data">
+    <tr><th style="width:80px;">城市</th><th style="width:110px;">行业</th><th>企业（示例占位）</th><th>岗位</th><th style="width:70px;">匹配度</th><th style="width:180px;">切入建议</th></tr>
+    <tr><td>{{城市}}</td><td>{{行业}}</td><td>{{企业名（须可溯源）}}</td><td>{{岗位名}}</td><td class="high">高</td><td>{{一句切入建议 [S#]}}</td></tr>
+    <tr><td>{{城市}}</td><td>{{行业}}</td><td>{{企业名}}</td><td>{{岗位名}}</td><td><span class="tag mid">中</span></td><td>{{切入建议}}</td></tr>
+    <tr><td>{{城市}}</td><td>{{行业}}</td><td>{{企业名}}</td><td>{{岗位名}}</td><td class="low">低·需补技能</td><td>{{补齐路径}}</td></tr>
+  </table>
+  <p class="src-note">共 ≥15 条（宜多不宜少）；企业与岗位来自 {{检索日期}} 前后的公开招聘信息，逐条来源见 05 来源清单；招聘信息时效性强，投递前请以企业官方渠道为准。</p>
+</div>
+
+<h2 class="section">03 3-5 年发展路径</h2>
+<div class="timeline">
+  <div class="tl-node"><span class="t">Y1（{{年}}）：打地基</span><br>技能提升：{{具体技能 + 验收标准（如"完成 2 个软硬结合作品"）}}<br>行业动作：{{实习/竞赛/证书计划}} ｜ 对应机会清单：#{{编号}}</div>
+  <div class="tl-node"><span class="t">Y2-Y3（{{年}}）：切入</span><br>技能提升：{{}}<br>行业动作：{{秋招/考研，目标清单 #、#}} ｜ 里程碑：{{offer 数量/薪资区间}}</div>
+  <div class="tl-node"><span class="t">Y4-Y5（{{年}}）：晋升/转型</span><br>晋升规划：{{资深岗/管理线/转型方向}} ｜ 里程碑：{{}}</div>
+</div>
+
+<h2 class="section">04 风险与备选方案</h2>
+<div class="card neg"><span class="tag neg">不建议/慎入</span>{{结合画像与行业数据的"慎入"方向 + 理由（至少 2 条）。}}</div>
+<div class="card"><span class="tag pos">备选</span>{{若主线受挫的 Plan B（备选城市/行业/路径）。}}</div>
+
+<h2 class="section">05 来源清单</h2>
+<ol class="sources">
+  <li>[S1] {{招聘平台/企业官网/权威榜单：标题，平台，检索日期}}</li>
+  <li>[S2] {{行业与政策数据来源（若引用宏观调研报告，注明其来源编号）}}</li>
+  <li class="unverified">[S3] {{非权威来源（视觉降级标注）}}</li>
+</ol>
+
+<script>
+// 硬性规则：
+// ① animation:false（否则 PDF 导出空白）
+// ② 本地 echarts.min.js 优先（上方已引入，含 CDN 双兜底）
+// ③ 每个 id 必须有对应容器
+// ④ 所有图表统一登记到 window.__charts，供 resize / beforeprint 统一重排
+//    （地图由 ChinaMap.render 自动登记，并自带 __chinaMap 标记走"恢复实际尺寸"分支）
+const ANIM = false;
+window.__charts = window.__charts || [];
+
+function mk(id, opt){
+  const el = document.getElementById(id);
+  if (!el || typeof echarts === 'undefined') {
+    if (el) el.innerHTML = '<p style="color:#9E9E9E;padding:40px;">图表加载失败：未找到 echarts.min.js。</p>';
+    return null;
+  }
+  opt.animation = ANIM;
+  const c = echarts.init(el);          // ★ 注意是 echarts，不是插件的局部别名 ech
+  c.setOption(opt);
+  window.__charts.push(c);             // ★ 必须登记，否则打印时不会被重排
+  return c;
+}
+
+// 统一重排：普通图表打印时压到 300px；地图例外——layoutSize 按容器短边布局，
+// 压高会让地图溢出 SVG 被裁（南方城市消失），必须恢复容器实际尺寸
+function resizeAll(forPrint){
+  window.__charts.forEach(function(c){
+    if (c.__chinaMap) { c.resize({width:'auto',height:'auto'}); }
+    else { c.resize({width:'auto',height: forPrint ? 300 : 'auto'}); }
+  });
+}
+window.addEventListener('resize', function(){ resizeAll(false); });
+window.addEventListener('beforeprint', function(){ resizeAll(true); });
+
+// ── 图表创建区（全部图表在此创建，确保 DOM 已就绪）────────────────────────
+window.addEventListener('DOMContentLoaded', function(){
+
+  // 六维雷达：维度与分值来自 B3 画像，逐维依据存附录，禁止无依据打分
+  mk('chartRadar', {
+    color:['#8B1A1A'],
+    tooltip:{},
+    radar:{
+      indicator:[
+        {name:'专业技术',max:5},{name:'数据与AI素养',max:5},{name:'设计与表达',max:5},
+        {name:'实践与项目',max:5},{name:'沟通协作',max:5},{name:'行业认知',max:5}
+      ],
+      radius:'65%', splitLine:{lineStyle:{color:'#D9D2C7'}},
+      axisLine:{lineStyle:{color:'#D9D2C7'}},
+      splitArea:{areaStyle:{color:['#FFFFFF','#FAF7F2']}}
+    },
+    series:[{type:'radar', areaStyle:{opacity:.15},
+      data:[{value:[{{六维分值，逗号分隔}}], name:'当前画像'},
+            {value:[{{目标分值，Y3}}], name:'Y3 目标'}],
+      label:{show:true}}]
+  });
+
+  // 地图（启用地图模块时取消注释，并确保上方 4 段式脚本已按序引入）
+  // ChinaMap.render('mapBox', { data: [ {{城市, 数值}} ] });
+
+});
+</script>
+</body>
+</html>

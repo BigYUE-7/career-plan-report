@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>智能产品与AIGC创意设计领域职业能力调研报告</title>
+<script src="./echarts.min.js"></script>
+<script>
+  if (typeof echarts === 'undefined') {
+    document.write('<script src="https://cdn.staticfile.net/echarts/5.4.3/echarts.min.js"><\/script>');
+  }
+</script>
+<script>
+  if (typeof echarts === 'undefined') {
+    document.write('<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"><\/script>');
+  }
+</script>
+<!-- ══════════════ 地图模块（4 段式引入，顺序不可颠倒，必须在 echarts 之后） ══════════════ -->
+<script src="./china-city-geo.js"></script>
+<script src="./china-province-geo.js"></script>
+<script src="./china-map.js"></script>
+<style>
+  :root, body[data-theme="blue"] {
+    --c-title-bar: #1F3A5F; --blue2: #2b56c9; --cover1: #16255e; --cover2: #1F3A5F; --cover3: #2b56c9;
+    --c-positive: #C0392B; --c-negative: #1E5631; --c-unverified: #9E9E9E; --c-text: #2B2B2B; --c-bg: #F6F8FC; --c-line: #DDE4EF;
+  }
+  body[data-theme="red"]    { --c-title-bar: #8B1A1A; --blue2: #c0392b; --cover1: #4d0f14; --cover2: #8B1A1A; --cover3: #c0392b; }
+  body[data-theme="green"]  { --c-title-bar: #1E5631; --blue2: #2e8b57; --cover1: #123322; --cover2: #1E5631; --cover3: #2e8b57; }
+  body[data-theme="orange"] { --c-title-bar: #8B4A1A; --blue2: #c96f2b; --cover1: #4d2a0e; --cover2: #8B4A1A; --cover3: #c96f2b; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: var(--c-bg); color: var(--c-text); line-height: 1.8; max-width: 960px; margin: 0 auto; padding: 32px 40px 64px; }
+  .cover { background: linear-gradient(135deg, var(--cover1) 0%, var(--cover2) 55%, var(--cover3) 100%); color: #fff; padding: 44px 40px; border-radius: 8px; margin-bottom: 28px; }
+  .cover h1 { font-size: 28px; letter-spacing: 1px; }
+  .cover .sub { margin-top: 12px; font-size: 14px; opacity: .88; }
+  .summary { background: #fff; border-left: 6px solid var(--c-title-bar); padding: 20px 24px; border-radius: 0 8px 8px 0; margin-bottom: 12px; }
+  h2.section { background: var(--c-title-bar); color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 20px; margin: 44px 0 18px; }
+  h3 { font-size: 16px; margin: 22px 0 10px; border-left: 4px solid var(--c-title-bar); padding-left: 10px; }
+  .card { background: #fff; border-radius: 8px; padding: 20px 24px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.06); break-inside: avoid; }
+  .chart { width: 100%; height: 380px; }
+  .src-note { font-size: 12px; color: #8A8A8A; margin-top: 6px; }
+  .pos { border-left: 5px solid var(--c-positive); }
+  .neg { border-left: 5px solid var(--c-negative); background: #EFF5F0; }
+  .unverified { color: var(--c-unverified); }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 9px; border-radius: 10px; color: #fff; margin-right: 6px; }
+  .tag.pos { background: var(--c-positive); } .tag.neg { background: var(--c-negative); } .tag.mid { background: #D9A441; }
+  table.data { width: 100%; border-collapse: collapse; background: #fff; }
+  table.data th { background: var(--c-title-bar); color: #fff; padding: 8px; font-size: 14px; }
+  table.data td { border-bottom: 1px solid var(--c-line); padding: 8px; font-size: 14px; }
+  td.high { color: var(--c-positive); font-weight: bold; } td.low { color: var(--c-negative); font-weight: bold; }
+  .timeline { position: relative; margin: 24px 0; padding-left: 26px; border-left: 3px solid var(--c-title-bar); }
+  .tl-node { position: relative; margin-bottom: 20px; break-inside: avoid; }
+  .tl-node::before { content: ""; position: absolute; left: -34px; top: 7px; width: 12px; height: 12px; border-radius: 50%; background: var(--c-title-bar); }
+  .tl-node .t { font-weight: bold; color: var(--c-title-bar); }
+  ol.sources { font-size: 13px; background: #fff; padding: 20px 24px 20px 44px; border-radius: 8px; }
+  .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 14px; }
+  .stat { background: #fff; border-radius: 8px; padding: 16px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .stat .v { font-size: 26px; font-weight: bold; color: var(--c-title-bar); }
+  .stat .k { font-size: 13px; color: #68727f; margin-top: 4px; }
+  .chain { background: #fff; border-radius: 8px; padding: 18px 22px; margin-bottom: 12px; break-inside: avoid; border-left: 5px solid var(--c-title-bar); }
+  .chain .flow { font-weight: bold; color: var(--c-title-bar); margin: 6px 0; }
+  .chain .flow .arr { color: var(--blue2); font-weight: normal; padding: 0 4px; }
+  .chain .why { background: #F7F4EE; border-radius: 6px; padding: 8px 12px; margin-top: 8px; font-size: 14px; }
+  .layer3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 14px; }
+  .layer3 .col { background: #fff; border-radius: 8px; padding: 14px 16px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .layer3 .col h4 { color: var(--c-title-bar); font-size: 15px; margin-bottom: 8px; border-bottom: 2px solid var(--c-line); padding-bottom: 6px; }
+  .layer3 .col li { font-size: 13.5px; margin-left: 18px; margin-bottom: 4px; }
+  .talent-chain { display: flex; align-items: stretch; gap: 0; margin: 16px 0; flex-wrap: wrap; }
+  .talent-node { background: var(--c-title-bar); color: #fff; padding: 10px 14px; border-radius: 6px; font-size: 13.5px; text-align: center; flex: 1; min-width: 120px; display: flex; align-items: center; justify-content: center; }
+  .talent-arr { display: flex; align-items: center; padding: 0 6px; color: var(--blue2); font-size: 18px; }
+  .toolbar { position: fixed; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 9; }
+  .tool-btn { border: 1px solid var(--c-line); background: #fff; color: var(--c-text); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  .tool-btn.pdf { background: var(--c-title-bar); color: #fff; border-color: var(--c-title-bar); }
+  /* ═══ 整页艺术封面（v1.3.0 标配） ═══ */
+  .print-cover { position:relative; overflow:hidden; background:#FBF9F4; border-radius:16px; margin:14px 0 26px; aspect-ratio:210/297; display:flex; flex-direction:column; box-shadow:0 4px 24px rgba(0,0,0,.08); }
+  .print-cover .pc-top { display:flex; justify-content:space-between; align-items:center; padding:36px 42px 0; }
+  .print-cover .pc-series { font-family:"KaiTi","STKaiti",serif; font-size:15px; letter-spacing:3px; color:var(--c-title-bar); border-bottom:2px solid var(--c-title-bar); padding-bottom:6px; }
+  .print-cover .pc-seal { width:38px; height:38px; background:#B23A32; color:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:"KaiTi","STKaiti",serif; font-size:20px; }
+  .print-cover .pc-art { position:absolute; left:50%; top:42%; transform:translate(-50%,-50%); width:80%; }
+  .print-cover .pc-bottom { margin-top:auto; padding:0 42px 42px; text-align:right; }
+  .print-cover .pc-rule { height:2px; background:linear-gradient(90deg,transparent,var(--c-title-bar)); margin-bottom:18px; margin-left:32%; }
+  .print-cover .pc-year { font-size:32px; font-weight:bold; color:var(--c-title-bar); font-family:Georgia,"Times New Roman",serif; letter-spacing:3px; }
+  .print-cover .pc-title { font-family:"SimSun","STSong",serif; font-weight:bold; font-size:26px; letter-spacing:4px; line-height:1.6; color:var(--c-text); margin:6px 0 12px; }
+  .print-cover .pc-sub { font-size:15px; color:#5a564c; letter-spacing:1px; }
+  .print-cover .pc-meta { font-size:12.5px; color:#8a8578; margin-top:14px; line-height:1.9; }
+  @media print {
+    @page { size: A4; margin: 0; }
+    .toolbar { display: none; }
+    body { padding: 14mm 12mm; max-width: none; background: #fff; }
+    .cover { border-radius: 0; }
+    h2.section { margin: 24px 0 14px; break-after: avoid; }
+    .card { box-shadow: none; margin-bottom: 10px; break-inside: avoid; }
+    .chart { height: 300px; break-inside: avoid; }
+    .timeline { break-inside: avoid; }
+    table.data { break-inside: auto; }
+    table.data tr { break-inside: avoid; }
+    a { color: inherit; text-decoration: none; }
+    #mapBox { width: 88%; margin: 0 auto; }
+    .print-cover { margin:-14mm -12mm 0; width:calc(100% + 24mm); aspect-ratio:auto; height:297mm; border-radius:0; box-shadow:none; break-after:page; page-break-after:always; }
+    .stats, .layer3 { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+</head>
+<body data-theme="blue">
+<div class="toolbar">
+  <button class="tool-btn" onclick="var T=['blue','red','green','orange'];document.body.dataset.theme=T[(T.indexOf(document.body.dataset.theme||'blue')+1)%4]">切换配色</button>
+  <button class="tool-btn pdf" onclick="window.print()" title="打印对话框中选'另存为 PDF'，边距选'无'，取消勾选'页眉和页脚'（浏览器会记住此设置）">导出 PDF</button>
+</div>
+
+<div class="page">
+
+<!-- ═══ 整页艺术封面 ═══ -->
+<div class="print-cover">
+  <div class="pc-top">
+    <span class="pc-series">职业发展系列 · 01 宏观调研</span>
+    <span class="pc-seal">职</span>
+  </div>
+  <div class="pc-art">
+    <svg viewBox="0 0 680 680" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <path id="pcPetalSYH01" d="M0 0 C -40 -34 -46 -100 0 -138 C 46 -100 40 -34 0 0 Z"/>
+      </defs>
+      <circle cx="340" cy="340" r="250" fill="none" stroke="var(--c-title-bar)" stroke-opacity=".18" stroke-dasharray="3 7"/>
+      <g opacity=".92">
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(0) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(36) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(72) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(108) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(144) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(180) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(216) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(252) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(288) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(324) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(18) scale(1.34)" fill="none" stroke="var(--c-title-bar)" stroke-opacity=".22"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(90) scale(1.34)" fill="none" stroke="var(--c-title-bar)" stroke-opacity=".22"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(162) scale(1.34)" fill="none" stroke="var(--c-title-bar)" stroke-opacity=".22"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(234) scale(1.34)" fill="none" stroke="var(--c-title-bar)" stroke-opacity=".22"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(306) scale(1.34)" fill="none" stroke="var(--c-title-bar)" stroke-opacity=".22"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(0) scale(0.98)" fill="var(--c-title-bar)" fill-opacity=".14"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(45) scale(0.98)" fill="var(--c-title-bar)" fill-opacity=".14"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(90) scale(0.98)" fill="var(--c-title-bar)" fill-opacity=".14"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(135) scale(0.98)" fill="var(--c-title-bar)" fill-opacity=".14"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(180) scale(0.98)" fill="var(--c-title-bar)" fill-opacity=".14"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(225) scale(0.98)" fill="var(--c-title-bar)" fill-opacity=".14"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(270) scale(0.98)" fill="var(--c-title-bar)" fill-opacity=".14"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(315) scale(0.98)" fill="var(--c-title-bar)" fill-opacity=".14"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(22.5) scale(0.6)" fill="var(--c-title-bar)" fill-opacity=".24"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(112.5) scale(0.6)" fill="var(--c-title-bar)" fill-opacity=".24"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(202.5) scale(0.6)" fill="var(--c-title-bar)" fill-opacity=".24"/></g>
+        <g><use href="#pcPetalSYH01" transform="translate(340 340) rotate(292.5) scale(0.6)" fill="var(--c-title-bar)" fill-opacity=".24"/></g>
+      </g>
+      <g stroke="var(--c-title-bar)" stroke-opacity=".4" fill="none">
+        <path d="M340 470 C 320 540 260 560 210 585"/>
+        <path d="M340 470 C 365 545 430 565 480 592"/>
+      </g>
+      <circle cx="340" cy="340" r="10" fill="var(--c-title-bar)" fill-opacity=".55"/>
+    </svg>
+  </div>
+  <div class="pc-bottom">
+    <div class="pc-rule"></div>
+    <div class="pc-year">2026</div>
+    <div class="pc-title">智能产品与AIGC创意设计领域<br>职业能力调研报告</div>
+    <div class="pc-sub">产业—职业生态 · 上下游传导 · 职业进入路径</div>
+    <div class="pc-meta">报告链位置：01 宏观调研报告 ｜ 服务专业：智能工程与创意设计<br>检索日期：2026-10-03 ｜ 由 AI 辅助生成（career-plan-report skill v1.2.0）</div>
+  </div>
+</div>
+
+<div class="cover">
+  <h1>智能产品与AIGC创意设计领域职业能力调研报告</h1>
+  <div class="sub">宏观·产业—职业生态分析 ｜ 检索日期：2026-10-03 ｜ 生成：AI 辅助（career-plan-report skill），底座结论随附（14 节），来源清单见文末</div>
+</div>
+
+<div class="summary">
+  <strong>一句话结论：</strong>这是一个"总量稳、结构剧变"的行业——执行型设计（建模/渲染/修图）正被 AIGC 快速贬值，而"定义产品 + 驾驭 AI + 软硬融合"的复合能力溢价 35%-50%；AI 眼镜等新终端三年 25 倍的爆发，正在为本专业打开一条"设计×工程"交叉的黄金通道。<br>
+  <strong>对智能工程与创意设计专业的含义：</strong>你最大的竞争力不是"会画图"也不是"会写代码"，而是站在<b>产品定义与结构落地之间的翻译层</b>——这是纯设计专业和纯工科专业都占不住的位置。
+</div>
+
+<h2 class="section">01 行业规模与结构（M1/M2）</h2>
+<div class="stats">
+  <div class="stat"><div class="v">278.4亿美元</div><div class="k">中国工业设计市场（2025）</div></div>
+  <div class="stat"><div class="v">480亿元</div><div class="k">国内智能硬件设计服务（2025）</div></div>
+  <div class="stat"><div class="v">805.8亿元</div><div class="k">中国AIGC核心市场（2025，+70%）</div></div>
+  <div class="stat"><div class="v">+136%</div><div class="k">AIGC 相关岗位需求增速（2026）</div></div>
+</div>
+<div class="card">
+  <div id="chartStructure" class="chart"></div>
+  <p class="src-note">数据：全球工业设计市场 1968.2 亿美元（2025），消费电子与智能硬件占 31.6%；来源 [S1][S2]。</p>
+</div>
+<div class="card">
+  <p><strong>行业边界（M1）</strong>：本领域包含工业设计（智能硬件方向）、CMF、交互与体验设计、AIGC 视觉内容创作、创意技术（装置与展览）；不包含纯算法研究（硕士起步、与本专业错位）与纯建筑工程设计。本专业的独特定位是：<b>向内接"产品定义"、向外接"结构工程与供应链"的翻译层</b>——纯设计专业画不出能落地的结构，纯工科专业给不出打动人的体验，两端之间就是机会带。</p>
+</div>
+
+<h2 class="section">02 产业链上下游（M2/M3 ★）</h2>
+<div class="layer3">
+  <div class="col">
+    <h4>上游 · 基础层</h4>
+    <ul>
+      <li>元器件与传感器（AI 眼镜带动轻量化低功耗迭代）</li>
+      <li>光学/显示模组（占 AI 显示眼镜成本过半）</li>
+      <li>生成式工具生态（SD/ComfyUI/CAID，工具覆盖率 17%→44%）</li>
+      <li>模具与结构件（设计到量产周期缩短约 40%）</li>
+    </ul>
+  </div>
+  <div class="col">
+    <h4>中游 · 服务与平台层</h4>
+    <ul>
+      <li>工业设计公司（深圳 1400+ 家，全链路能力者不足 15%）</li>
+      <li>品牌企业设计中心（华为/小米/安克等）</li>
+      <li>交互/UX 团队（AI 体验设计师成为新岗位）</li>
+      <li>AIGC 内容工作室（电商/漫剧/MCN）</li>
+      <li>展览展示公司（创意技术/新媒体艺术）</li>
+    </ul>
+  </div>
+  <div class="col">
+    <h4>下游 · 应用层</h4>
+    <ul>
+      <li>消费电子/智能家居（需求最大板块 31.6%）</li>
+      <li>AI 眼镜等新终端（三年 25 倍）</li>
+      <li>医疗器械（增速最快 CAGR 11.2%）</li>
+      <li>电商内容（AIGC 视觉岗位增速超 200%）</li>
+      <li>文旅展览/教育装备</li>
+    </ul>
+  </div>
+</div>
+<div class="card">
+  <div id="chartGlasses" class="chart"></div>
+  <p class="src-note">数据：AI 眼镜全球出货 2023 年 34 万台→2025 年 870 万台（里斯战略咨询）；中国智能眼镜 2025 年 253.6 万台→2026E 450.8 万台（IDC）；来源 [S5][S6]。</p>
+</div>
+
+<h2 class="section">03 企业生态与岗位生态（M4/M5 ★）</h2>
+<div class="card">
+  <h3>岗位生态四列表（本报告核心产出表，微观规划直接引用）</h3>
+  <table class="data">
+    <tr><th>产业环节</th><th>企业类型</th><th>典型岗位</th><th>核心能力</th></tr>
+    <tr><td>智能硬件终端</td><td>品牌大厂/出海公司（小米、安克创新）</td><td>工业设计师、CMF 设计师</td><td>Rhino/KeyShot、CMF、供应链协同</td></tr>
+    <tr><td>设计服务</td><td>专业设计公司（深圳 1400+ 家）</td><td>产品设计师、项目设计师</td><td>全链路落地、模具可行性、汇报表达</td></tr>
+    <tr><td>软件交互</td><td>互联网/AI 应用公司</td><td>交互/UX/UI、AI 体验设计师</td><td>Figma、用户研究、AIGC 应用</td></tr>
+    <tr><td>AIGC 内容</td><td>电商代运营/MCN/游戏</td><td>AIGC 视觉/全链路设计师</td><td>ComfyUI 工作流、商业交付、审美判断</td></tr>
+    <tr><td>新兴 AI 硬件</td><td>AI 眼镜/机器人创业公司（雷鸟、Rokid）</td><td>产品设计师、创意技术</td><td>软硬融合、Arduino/快速原型</td></tr>
+    <tr><td>展览文旅</td><td>展示/文旅公司</td><td>新媒体艺术家、创意技术</td><td>互动装置、光影、TouchDesigner</td></tr>
+  </table>
+  <p class="src-note">企业示例来自公开招聘信息与行业报道（检索日 2026-10-03），投递前请以企业官方渠道为准。</p>
+</div>
+<div class="card">
+  <div id="chartSalary" class="chart"></div>
+  <p class="src-note">薪资带（月薪中值，柱内标注实际区间）：深圳工业设计师 5-10K/15-35K/40-70K（猎聘 2026）；AIGC 设计师 6-10K/10-18K/20-35K（行业统计 2026，59.9% 岗位集中在 10-30K）。来源 [S3][S4]。</p>
+</div>
+
+<h2 class="section">04 上下游传导分析（M9 ★ 职业趋势的关键）</h2>
+<div class="chain">
+  <span class="tag pos">传导链 1 · AI 终端品类爆发</span>
+  <div class="flow">端侧模型成熟+光学/芯片降本<span class="arr">→</span>AI 眼镜出货 34万→870万台（25倍）<span class="arr">→</span>2026 国补拉动、百"镜"大战<span class="arr">→</span>新品类普遍缺乏"杀手级场景"<span class="arr">→</span><b>会定义产品场景、能做软硬融合原型的人才升值</b></div>
+  <div class="why"><b>证据</b>：里斯战略咨询/IDC/Omdia（2026）；2026 年智能眼镜纳入"国补"；深圳设计机构智能硬件项目占比达 45%（2025）。<b>对你的含义</b>：新品类要的不是更漂亮的外观，而是"定义品类价值"的人——产品定义+快速原型能力是未来 2-3 年最大的升值项。</div>
+</div>
+<div class="chain">
+  <span class="tag pos">传导链 2 · AIGC 产能革命</span>
+  <div class="flow">生成成本下降+工具覆盖率 17%→44%<span class="arr">→</span>内容产能过剩、执行型设计贬值<span class="arr">→</span>电商 AIGC 岗 +200% 但初级供给过剩<span class="arr">→</span>全链路复合人才招聘满足率不足三成<span class="arr">→</span><b>"AI 工作流+业务理解"溢价 35-50%</b></div>
+  <div class="why"><b>证据</b>：2026 年招聘数据（AIGC 岗 +136%、AI 应用开发岗 +218% vs 算法岗 37%）。<b>对你的含义</b>：单纯"会用 Midjourney"没有护城河；"能从需求到交付全流程跑通"才稀缺——执行技能贬值速度可能比你学会它还快，必须向判断力和工作流升级。</div>
+</div>
+<div class="chain">
+  <span class="tag pos">传导链 3 · 制造升级与出海</span>
+  <div class="flow">服务型制造政策+品牌出海<span class="arr">→</span>中小企业设计采购渗透率 28.4%→47.2%<span class="arr">→</span>设计服务从"外观单点"转向"全链路系统整合"<span class="arr">→</span><b>懂结构、懂供应链、能跟到底的设计师更值钱</b></div>
+  <div class="why"><b>证据</b>：工信部联政法〔2025〕202 号（2025-09）；行业调研（具备全链路能力的设计公司份额 18%→43%，2020-2025）。<b>对你的含义</b>：本专业"工程+设计"双轨培养正好对位——结构可行性、模具、CMF 这些"落地知识"是设计纯文科生补不上的。</div>
+</div>
+
+<h2 class="section">05 技能需求变化（M6）</h2>
+<div class="card">
+  <div id="chartPost" class="chart"></div>
+  <p class="src-note">数据：2026 年同比增速，来源 [S4]（教育宝转引行业统计，权威性中等，已标注）。</p>
+</div>
+<div class="card">
+  <p><span class="tag neg">贬值中</span>纯建模/渲染/修图等执行技能——AI 可一键生成草图、快速建模、自动渲染；"绘图员/建模师/渲染师"类岗位持续收缩。</p>
+  <p style="margin-top:10px;"><span class="tag pos">升值中</span>审美判断力（从 AI 产出中筛选与深化）、跨专业协作（与结构/电子/算法对话）、AI 驾驭力（工作流编排与参数调优）、产品定义与用户洞察。头部企业要求已从"把界面做漂亮"转向"完整产品体验 + 业务理解 + AI 能力"。</p>
+</div>
+
+<h2 class="section">06 区域分布（M7）</h2>
+<div class="card">
+  <div id="mapBox" style="width:100%;height:420px;"></div>
+  <p class="src-note">数值依据：2026-09 公开招聘 UI 设计师岗位观察样本（深圳 55 / 广州 45 / 上海 44 / 北京 34 / 杭州 20，优漫教育招聘观察，非全量口径）。深圳另有官方口径：设计师 22 万+、工业设计机构 2.2 万家、iF+红点获奖连续 13 年全国第一。</p>
+</div>
+<div class="card">
+  <table class="data">
+    <tr><th>城市</th><th>定位</th><th>关键事实（检索日 2026-10-03）</th><th>适合谁</th></tr>
+    <tr><td class="high">深圳</td><td>智能硬件之都</td><td>创意设计单位 3.3 万家、国家级工业设计中心 13 家；2025 设计机构智能硬件项目占 45%；2026 服务市场预计 800 亿</td><td>想做智能硬件产品设计、离供应链最近的人</td></tr>
+    <tr><td class="high">上海-杭州</td><td>UX/AI 应用高地</td><td>3-5 年 UX 年薪可达 30 万；阿里 AI 体验设计师岗位四城同招</td><td>交互/体验设计、AI 应用方向</td></tr>
+    <tr><td>北京</td><td>科技文化创新</td><td>展览展示、新媒体艺术、品牌总部集中</td><td>创意技术、展览展示方向</td></tr>
+    <tr><td>苏州-宁波-东莞</td><td>智能制造配套带</td><td>苏州三年行动计划：2027 年国家级工业设计中心 15 家；AI+工业设计垂直大模型最高 50 万支持</td><td>设计转工程、结构落地方向</td></tr>
+  </table>
+</div>
+
+<h2 class="section">07 政策解读（M8）</h2>
+<div class="timeline">
+  <div class="tl-node"><span class="t">2025-05 ｜ 苏州市工业设计三年行动计划（2025-2027）</span><br>建"国际工业设计之都"；对 AI+工业设计垂直大模型择优最高 50 万元支持；三年培育 1000 名工业设计创新人才——地方层面确认"设计×AI"是确定方向。</div>
+  <div class="tl-node"><span class="t">2025-09 ｜ 《服务型制造创新发展实施方案(2025-2028)》工信部联政法〔2025〕202号</span><br>七部门联合：明确"发展工业设计""推动工业设计与人工智能等数智技术相结合"——工业设计被定位为生产性服务业重点领域。</div>
+  <div class="tl-node"><span class="t">2025-12 ｜ 《"人工智能+制造"专项行动实施意见》工信部联科〔2025〕279号</span><br>八部门联合：研发设计环节推进智能辅助设计；培育 AI 终端与具身智能产品；推出 1000 个高水平工业智能体——产品端（新硬件）与服务端（AI 设计工具）两端同时利好本专业。</div>
+  <div class="tl-node"><span class="t">2026 ｜ AI 眼镜纳入"国补"</span><br>需求侧直接补贴新终端品类——新品爆发=新品设计岗位，设计需求前置受益。</div>
+</div>
+
+<h2 class="section">08 人才链与进入路径（M10/M11）</h2>
+<div class="card">
+  <h3>人才链：职业是产业链上的一个位置，不是孤立岗位</h3>
+  <div class="talent-chain">
+    <div class="talent-node">设计执行<br>建模/渲染/AI出图</div><div class="talent-arr">→</div>
+    <div class="talent-node">产品设计师<br>定义+落地</div><div class="talent-arr">→</div>
+    <div class="talent-node">资深/CMF专家<br>专精深度</div><div class="talent-arr">→</div>
+    <div class="talent-node">设计管理/策略<br>团队与业务</div>
+  </div>
+  <p>旁支迁移：产品设计师 → 智能产品经理（定义权）；产品设计师 → 创意技术（展览/装置）；AIGC 设计师 → 全链路设计师 → AI 创意总监。本专业毕业生的合理起点是<b>"设计执行+原型验证"混合位</b>，比纯设计专业更快向左翼（工程）或右翼（定义）迁移。</p>
+</div>
+<div class="card">
+  <h3>分年级行动路径（普通本科版）</h3>
+  <table class="data">
+    <tr><th style="width:90px;">年级</th><th>核心任务</th><th>验收标准</th></tr>
+    <tr><td>大一~大二</td><td>打牢"手头功夫+工具面"：三维建模、视觉表达、Python 基础；广泛试错找兴趣锚点</td><td>完成 2~3 个课程级完整作品</td></tr>
+    <tr><td class="high">大三（关键期）</td><td>确定主航道并做出"能打动人的证据"：软硬结合作品（Arduino+结构+App 原型）、参加 1~2 项省级以上竞赛、争取深圳/长三角实习；AIGC 工作流达到商业交付水平</td><td>作品集 3 个深度项目 + 1 段实习或 1 项省奖</td></tr>
+    <tr><td>大四</td><td>秋招主攻智能硬件产品设计师/交互设计师岗，AIGC 内容岗作为保底；或考研冲刺工业设计/交互设计强校</td><td>≥2 个对口 offer 或考研上岸</td></tr>
+  </table>
+</div>
+
+<h2 class="section">09 前景预判</h2>
+<div class="card pos">
+  <p><strong>确定性趋势（直接写进规划）</strong>：① 执行型设计岗位继续收缩，复合型岗位继续扩张——这不是周期而是结构；② AI 终端新品类（眼镜/机器人/具身智能）带来增量设计岗位，2026 年智能硬件设计是需求最旺板块；③ "设计×AI 工具"成为默认技能，3 年后不会用 AIGC 工作流的设计师将像今天不会用 Rhino 的工业设计师。</p>
+</div>
+<div class="card neg">
+  <p><strong>风险提示</strong>：① AIGC 入门者供给过剩——仅会基础工具操作的竞争极度内卷，培训市场宣传的"缺口 200 万"含水量大（见来源标注）；② 深圳/上海头部岗位普遍要求 3 年经验，应届生第一站大概率是设计公司或内容机构而非大厂；③ 自由职业接单收入波动大，不宜作为毕业首年主策略。</p>
+</div>
+
+<h2 class="section">10 来源清单</h2>
+<ol class="sources">
+  <li>[S1] 全球及中国工业设计市场研究深度分析报告（2026），柒一全球网，检索 2026-10-03</li>
+  <li>[S2] 全球工业设计行业趋势与展望报告（2026），产业世界，检索 2026-10-03</li>
+  <li>[S3] 深圳 2026 年工业设计师招聘概况，爱企查/猎聘，检索 2026-10-03</li>
+  <li>[S4] AIGC 设计人才培养与岗位数据（含 2026 岗位增速/缺口/薪资），上海教育宝（转引行业统计，权威性中等），检索 2026-10-03</li>
+  <li>[S5] 《2026 全球 AI 眼镜行业战略洞察报告》，里斯战略咨询（2026-09-23），检索 2026-10-03</li>
+  <li>[S6] 智能眼镜"热"撬动产业链升级（含 IDC 中国出货预测），央视网产业（2026-01），检索 2026-10-03</li>
+  <li>[S7] 《深入推动服务型制造创新发展实施方案(2025-2028)》，工信部等七部门（2025-09-15）</li>
+  <li>[S8] 《"人工智能+制造"专项行动实施意见》，工信部等八部门（2025-12-25）</li>
+  <li>[S9] 苏州市大力培育工业设计产业发展三年行动计划（2025-2027），苏州市人民政府（2025-05）</li>
+  <li>[S10] "设计之都"词条（深圳设计产业官方口径数据），百度百科，检索 2026-10-03</li>
+  <li class="unverified">[S11] 深圳 2026 工业设计服务市场 800 亿预测、设计师 15 万口径，义乌网（非权威，与 [S10] 存在口径冲突，采信 [S10]）</li>
+  <li class="unverified">[S12] 工业设计就业环境观察（岗位结构变化）、AI 眼镜行业报告解读，索果设计/澎湃新闻（行业观点，视觉降级）</li>
+</ol>
+<p class="src-note" style="text-align:center;margin-top:20px;">报告链位置：01 宏观调研报告（配套 底座结论.md 14 节随附，供 02 个人规划书直接引用）｜ 数据时效 6 个月内有效</p>
+
+</div>
+
+<script>
+// 硬性规则：① animation:false（否则 PDF 导出空白）② 本地 echarts 优先 ③ 每个 id 有对应容器 ④ 统一登记 window.__charts
+const ANIM = false;
+window.__charts = window.__charts || [];
+
+function mk(id, opt){
+  const el = document.getElementById(id);
+  if (!el || typeof echarts === 'undefined') {
+    if (el) el.innerHTML = '<p style="color:#9E9E9E;padding:40px;">图表加载失败：未找到 echarts.min.js。</p>';
+    return null;
+  }
+  opt.animation = ANIM;
+  const c = echarts.init(el);          // ★ 注意是 echarts，不是插件的局部别名 ech
+  c.setOption(opt);
+  window.__charts.push(c);             // ★ 必须登记，否则打印时不会被重排
+  return c;
+}
+
+function resizeAll(forPrint){
+  window.__charts.forEach(function(c){
+    if (c.__chinaMap) { c.resize({width:'auto',height:'auto'}); }
+    else { c.resize({width:'auto',height: forPrint ? 300 : 'auto'}); }
+  });
+}
+window.addEventListener('resize', function(){ resizeAll(false); });
+window.addEventListener('beforeprint', function(){ resizeAll(true); });
+
+window.addEventListener('DOMContentLoaded', function(){
+
+  // 需求结构饼图：全球工业设计市场构成（亿美元，2025）
+  mk('chartStructure', {
+    tooltip:{ trigger:'item', formatter:'{b}<br/>{c} 亿美元（{d}%）' },
+    legend:{ bottom:0 },
+    series:[{
+      type:'pie', radius:['38%','66%'], center:['50%','46%'],
+      label:{ formatter:'{b}\n{d}%' },
+      data:[
+        { value:621.3, name:'消费电子与智能硬件', itemStyle:{color:'#1F3A5F'} },
+        { value:488.4, name:'汽车工业设计', itemStyle:{color:'#2b56c9'} },
+        { value:245.7, name:'医疗与健康产品', itemStyle:{color:'#0e7c86'} },
+        { value:612.8, name:'家电/装备/其他', itemStyle:{color:'#D9A441'} }
+      ]
+    }]
+  });
+
+  // AI 眼镜出货量：新终端品类三年 25 倍
+  mk('chartGlasses', {
+    tooltip:{ trigger:'axis' },
+    legend:{ bottom:0 },
+    grid:{ left:60, right:30, top:40, bottom:60 },
+    xAxis:{ type:'category', data:['2023','2024','2025','2026E'] },
+    yAxis:{ type:'value', name:'万台' },
+    series:[
+      { name:'全球 AI 眼镜出货', type:'line', symbolSize:8,
+        data:[34, null, 870, 1000], itemStyle:{color:'#1F3A5F'}, lineStyle:{width:3},
+        label:{show:true}, connectNulls:false },
+      { name:'中国智能眼镜出货（IDC）', type:'line', symbolSize:8,
+        data:[null, null, 253.6, 450.8], itemStyle:{color:'#D9A441'}, lineStyle:{width:3},
+        label:{show:true}, connectNulls:false }
+    ]
+  });
+
+  // 薪资带：柱中值为示意，实际区间见注
+  mk('chartSalary', {
+    tooltip:{ trigger:'axis' },
+    legend:{ bottom:0 },
+    grid:{ left:60, right:30, top:40, bottom:60 },
+    xAxis:{ type:'category', data:['初级(0-3年)','中级(3-8年)','高级(5-10年)'] },
+    yAxis:{ type:'value', name:'千元/月' },
+    series:[
+      { name:'深圳工业设计师', type:'bar', barWidth:'26%',
+        data:[7.5, 25, 55], itemStyle:{color:'#1F3A5F'} },
+      { name:'AIGC 设计师', type:'bar', barWidth:'26%',
+        data:[8, 14, 27.5], itemStyle:{color:'#D9A441'} }
+    ]
+  });
+
+  // 岗位增速：2026 同比
+  mk('chartPost', {
+    tooltip:{ trigger:'axis' },
+    grid:{ left:60, right:30, top:30, bottom:70 },
+    xAxis:{ type:'category', data:['AIGC 相关岗位','AI 应用开发岗','电商/短视频 AIGC 设计','游戏 AI 岗','算法岗'], axisLabel:{interval:0, rotate:16} },
+    yAxis:{ type:'value', name:'同比增速 %' },
+    series:[{
+      type:'bar', barWidth:'46%',
+      data:[
+        {value:136, itemStyle:{color:'#1F3A5F'}},
+        {value:218, itemStyle:{color:'#C0392B'}},
+        {value:200, itemStyle:{color:'#2b56c9'}},
+        {value:127, itemStyle:{color:'#0e7c86'}},
+        {value:37,  itemStyle:{color:'#9E9E9E'}}
+      ],
+      label:{show:true, position:'top', formatter:'{c}%'}
+    }]
+  });
+
+  // 区域分布地图（ChinaMap.render 自动登记 __charts 并带 __chinaMap 标记）
+  ChinaMap.render('mapBox', {
+    data: [
+      { name:'深圳市', value:55 },
+      { name:'广州市', value:45 },
+      { name:'上海市', value:44 },
+      { name:'北京市', value:34 },
+      { name:'杭州市', value:20 }
+    ]
+  });
+
+});
+</script>
+</body>
+</html>

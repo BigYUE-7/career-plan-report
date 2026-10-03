@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>个人职业规划书——智能工程与创意设计（沈亦航）</title>
+<script src="./echarts.min.js"></script>
+<script>
+  if (typeof echarts === 'undefined') {
+    document.write('<script src="https://cdn.staticfile.net/echarts/5.4.3/echarts.min.js"><\/script>');
+  }
+</script>
+<script>
+  if (typeof echarts === 'undefined') {
+    document.write('<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"><\/script>');
+  }
+</script>
+<!-- ══════════════ 地图模块（4 段式引入，顺序不可颠倒，必须在 echarts 之后） ══════════════ -->
+<script src="./china-city-geo.js"></script>
+<script src="./china-province-geo.js"></script>
+<script src="./china-map.js"></script>
+<style>
+  :root, body[data-theme="blue"] {
+    --c-title-bar: #1F3A5F; --blue2: #2b56c9; --cover1: #16255e; --cover2: #1F3A5F; --cover3: #2b56c9;
+    --c-positive: #C0392B; --c-negative: #1E5631; --c-unverified: #9E9E9E; --c-text: #2B2B2B; --c-bg: #F6F8FC; --c-line: #DDE4EF;
+  }
+  body[data-theme="red"]    { --c-title-bar: #8B1A1A; --blue2: #c0392b; --cover1: #4d0f14; --cover2: #8B1A1A; --cover3: #c0392b; }
+  body[data-theme="green"]  { --c-title-bar: #1E5631; --blue2: #2e8b57; --cover1: #123322; --cover2: #1E5631; --cover3: #2e8b57; }
+  body[data-theme="orange"] { --c-title-bar: #8B4A1A; --blue2: #c96f2b; --cover1: #4d2a0e; --cover2: #8B4A1A; --cover3: #c96f2b; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: "Microsoft YaHei", "PingFang SC", sans-serif; background: var(--c-bg); color: var(--c-text); line-height: 1.8; max-width: 960px; margin: 0 auto; padding: 32px 40px 64px; }
+  .cover { background: linear-gradient(135deg, var(--cover1) 0%, var(--cover2) 55%, var(--cover3) 100%); color: #fff; padding: 44px 40px; border-radius: 8px; margin-bottom: 28px; }
+  .cover h1 { font-size: 28px; letter-spacing: 1px; }
+  .cover .sub { margin-top: 12px; font-size: 14px; opacity: .88; }
+  .summary { background: #fff; border-left: 6px solid var(--c-title-bar); padding: 20px 24px; border-radius: 0 8px 8px 0; margin-bottom: 12px; }
+  h2.section { background: var(--c-title-bar); color: #fff; padding: 10px 20px; border-radius: 6px; font-size: 20px; margin: 44px 0 18px; }
+  h3 { font-size: 16px; margin: 22px 0 10px; border-left: 4px solid var(--c-title-bar); padding-left: 10px; }
+  .card { background: #fff; border-radius: 8px; padding: 20px 24px; margin-bottom: 14px; box-shadow: 0 1px 4px rgba(0,0,0,.06); break-inside: avoid; }
+  .chart { width: 100%; height: 380px; }
+  .src-note { font-size: 12px; color: #8A8A8A; margin-top: 6px; }
+  .pos { border-left: 5px solid var(--c-positive); }
+  .neg { border-left: 5px solid var(--c-negative); background: #EFF5F0; }
+  .unverified { color: var(--c-unverified); }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 9px; border-radius: 10px; color: #fff; margin-right: 6px; }
+  .tag.pos { background: var(--c-positive); } .tag.neg { background: var(--c-negative); } .tag.mid { background: #D9A441; }
+  table.data { width: 100%; border-collapse: collapse; background: #fff; }
+  table.data th { background: var(--c-title-bar); color: #fff; padding: 8px; font-size: 14px; }
+  table.data td { border-bottom: 1px solid var(--c-line); padding: 8px; font-size: 14px; }
+  td.high { color: var(--c-positive); font-weight: bold; } td.low { color: var(--c-negative); font-weight: bold; }
+  .timeline { position: relative; margin: 24px 0; padding-left: 26px; border-left: 3px solid var(--c-title-bar); }
+  .tl-node { position: relative; margin-bottom: 20px; break-inside: avoid; }
+  .tl-node::before { content: ""; position: absolute; left: -34px; top: 7px; width: 12px; height: 12px; border-radius: 50%; background: var(--c-title-bar); }
+  .tl-node .t { font-weight: bold; color: var(--c-title-bar); }
+  ol.sources { font-size: 13px; background: #fff; padding: 20px 24px 20px 44px; border-radius: 8px; }
+  .toolbar { position: fixed; top: 12px; right: 12px; display: flex; gap: 8px; z-index: 9; }
+  .tool-btn { border: 1px solid var(--c-line); background: #fff; color: var(--c-text); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; box-shadow: 0 1px 3px rgba(0,0,0,.1); }
+  .tool-btn.pdf { background: var(--c-title-bar); color: #fff; border-color: var(--c-title-bar); }
+  .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 14px; }
+  .stat { background: #fff; border-radius: 8px; padding: 16px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
+  .stat .v { font-size: 24px; font-weight: bold; color: var(--c-title-bar); }
+  .stat .k { font-size: 13px; color: #68727f; margin-top: 4px; }
+  .route-tree { background:#fff; border-radius:8px; padding:18px 22px; break-inside:avoid; }
+  .rt-root { background: var(--c-title-bar); color:#fff; border-radius:6px; padding:10px 16px; display:inline-block; font-weight:bold; }
+  .rt-row { display:flex; align-items:flex-start; gap:10px; margin:12px 0 0 18px; }
+  .rt-cond { background:#F7F4EE; border:1px dashed var(--c-line); border-radius:6px; padding:8px 12px; font-size:13px; min-width:210px; }
+  .rt-act { border-left:4px solid var(--blue2); background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.06); border-radius:6px; padding:8px 12px; font-size:13px; flex:1; }
+  /* ═══ 整页艺术封面（v1.3.0 标配） ═══ */
+  .print-cover { position:relative; overflow:hidden; background:#FBF9F4; border-radius:16px; margin:14px 0 26px; aspect-ratio:210/297; display:flex; flex-direction:column; box-shadow:0 4px 24px rgba(0,0,0,.08); }
+  .print-cover .pc-top { display:flex; justify-content:space-between; align-items:center; padding:36px 42px 0; }
+  .print-cover .pc-series { font-family:"KaiTi","STKaiti",serif; font-size:15px; letter-spacing:3px; color:var(--c-title-bar); border-bottom:2px solid var(--c-title-bar); padding-bottom:6px; }
+  .print-cover .pc-seal { width:38px; height:38px; background:#B23A32; color:#fff; border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:"KaiTi","STKaiti",serif; font-size:20px; }
+  .print-cover .pc-art { position:absolute; left:50%; top:42%; transform:translate(-50%,-50%); width:80%; }
+  .print-cover .pc-bottom { margin-top:auto; padding:0 42px 42px; text-align:right; }
+  .print-cover .pc-rule { height:2px; background:linear-gradient(90deg,transparent,var(--c-title-bar)); margin-bottom:18px; margin-left:32%; }
+  .print-cover .pc-year { font-size:32px; font-weight:bold; color:var(--c-title-bar); font-family:Georgia,"Times New Roman",serif; letter-spacing:3px; }
+  .print-cover .pc-title { font-family:"SimSun","STSong",serif; font-weight:bold; font-size:32px; letter-spacing:6px; color:var(--c-text); margin:6px 0 12px; }
+  .print-cover .pc-sub { font-size:15px; color:#5a564c; letter-spacing:1px; }
+  .print-cover .pc-meta { font-size:12.5px; color:#8a8578; margin-top:14px; line-height:1.9; }
+  @media print {
+    @page { size: A4; margin: 0; }
+    .toolbar { display: none; }
+    body { padding: 14mm 12mm; max-width: none; background: #fff; }
+    .cover { border-radius: 0; }
+    h2.section { margin: 24px 0 14px; break-after: avoid; }
+    .card { box-shadow: none; margin-bottom: 10px; break-inside: avoid; }
+    .chart { height: 300px; break-inside: avoid; }
+    .timeline { break-inside: avoid; }
+    table.data { break-inside: auto; }
+    table.data tr { break-inside: avoid; }
+    a { color: inherit; text-decoration: none; }
+    #mapBox { width: 88%; margin: 0 auto; }
+    .print-cover { margin:-14mm -12mm 0; width:calc(100% + 24mm); aspect-ratio:auto; height:297mm; border-radius:0; box-shadow:none; break-after:page; page-break-after:always; }
+    .stats { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+</head>
+<body data-theme="blue">
+<div class="toolbar">
+  <button class="tool-btn" onclick="var T=['blue','red','green','orange'];document.body.dataset.theme=T[(T.indexOf(document.body.dataset.theme||'blue')+1)%4]">切换配色</button>
+  <button class="tool-btn pdf" onclick="window.print()" title="打印对话框中选'另存为 PDF'，边距选'无'，取消勾选'页眉和页脚'（浏览器会记住此设置）">导出 PDF</button>
+</div>
+
+<div class="page">
+
+<!-- ═══ 整页艺术封面 ═══ -->
+<div class="print-cover">
+  <div class="pc-top">
+    <span class="pc-series">职业发展系列 · 02 个人规划书</span>
+    <span class="pc-seal">航</span>
+  </div>
+  <div class="pc-art">
+    <svg viewBox="0 0 680 680" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <path id="pcPetalSYH02" d="M0 0 C -40 -34 -46 -100 0 -138 C 46 -100 40 -34 0 0 Z"/>
+      </defs>
+      <circle cx="340" cy="340" r="250" fill="none" stroke="var(--c-title-bar)" stroke-opacity=".18" stroke-dasharray="3 7"/>
+      <g opacity=".92">
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(0) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(36) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(72) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(108) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(144) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(180) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(216) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(252) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(288) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(324) scale(1.5)" fill="var(--c-title-bar)" fill-opacity=".07"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(18) scale(1.34)" fill="none" stroke="var(--c-title-bar)" stroke-opacity=".22"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(90) scale(1.34)" fill="none" stroke="var(--c-title-bar)" stroke-opacity=".22"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(162) scale(1.34)" fill="none" stroke="var(--c-title-bar)" stroke-opacity=".22"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(234) scale(1.34)" fill="none" stroke="var(--c-title-bar)" stroke-opacity=".22"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(306) scale(1.34)" fill="none" stroke="var(--c-title-bar)" stroke-opacity=".22"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(0) scale(0.98)" fill="var(--c-title-bar)" fill-opacity=".14"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(45) scale(0.98)" fill="var(--c-title-bar)" fill-opacity=".14"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(90) scale(0.98)" fill="var(--c-title-bar)" fill-opacity=".14"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(135) scale(0.98)" fill="var(--c-title-bar)" fill-opacity=".14"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(180) scale(0.98)" fill="var(--c-title-bar)" fill-opacity=".14"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(225) scale(0.98)" fill="var(--c-title-bar)" fill-opacity=".14"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(270) scale(0.98)" fill="var(--c-title-bar)" fill-opacity=".14"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(315) scale(0.98)" fill="var(--c-title-bar)" fill-opacity=".14"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(22.5) scale(0.6)" fill="var(--c-title-bar)" fill-opacity=".24"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(112.5) scale(0.6)" fill="var(--c-title-bar)" fill-opacity=".24"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(202.5) scale(0.6)" fill="var(--c-title-bar)" fill-opacity=".24"/></g>
+        <g><use href="#pcPetalSYH02" transform="translate(340 340) rotate(292.5) scale(0.6)" fill="var(--c-title-bar)" fill-opacity=".24"/></g>
+      </g>
+      <g stroke="var(--c-title-bar)" stroke-opacity=".4" fill="none">
+        <path d="M340 470 C 320 540 260 560 210 585"/>
+        <path d="M340 470 C 365 545 430 565 480 592"/>
+      </g>
+      <circle cx="340" cy="340" r="10" fill="var(--c-title-bar)" fill-opacity=".55"/>
+    </svg>
+  </div>
+  <div class="pc-bottom">
+    <div class="pc-rule"></div>
+    <div class="pc-year">2026-2031</div>
+    <div class="pc-title">个人职业规划书</div>
+    <div class="pc-sub">智能工程与创意设计 · 沈亦航 · 2024 级（大三）</div>
+    <div class="pc-meta">报告链位置：02 个人规划书 ｜ 主航道：智能硬件产品设计师<br>生成日期：2026-10-04 ｜ 由 AI 辅助生成（career-plan-report skill v1.2.0）</div>
+  </div>
+</div>
+
+<div class="cover">
+  <h1>个人职业规划书——智能工程与创意设计</h1>
+  <div class="sub">规划周期：2026-2031（3-5 年） ｜ 规划对象：沈亦航（2024 级大三） ｜ 由 AI 辅助生成（career-plan-report skill），画像依据见附录与《00-问卷与画像》</div>
+</div>
+
+<div class="summary">
+  <strong>一句话画像：</strong>最强项是"三维建模 × 原型落地"的软硬融合表达（省奖+大创+30 件作品集的证据链），最短板是行业认知（2.5/5）与实习空白——典型的"手比脑快、作品比视野先行"型大三学生。<br>
+  <strong>核心策略：</strong>主航道<b>智能硬件产品设计师</b>（吃下 AI 终端品类爆发的"场景定义"红利）；落脚深圳-杭州带，苏州家乡为后备；关键跳板是<b>大三暑期深圳/杭州实习 + 2 项省级以上竞赛奖项</b>；AIGC 全链路能力作为保底技能与接单副线，而非主线。
+</div>
+
+<h2 class="section">01 个人概况</h2>
+<div class="stats">
+  <div class="stat"><div class="v">大三</div><div class="k">2024 级 · 智能工程与创意设计</div></div>
+  <div class="stat"><div class="v">3.5/5</div><div class="k">专业技术（自述依据评分）</div></div>
+  <div class="stat"><div class="v">16 条</div><div class="k">可溯源机会清单（第 08 章）</div></div>
+  <div class="stat"><div class="v">主航道已定</div><div class="k">智能硬件产品设计师</div></div>
+</div>
+<div class="card">
+  <p>沈亦航，智能工程与创意设计专业 2024 级本科生（本规划书为"最终完整展示"用途的模拟人设，问卷与补问数据按 v1.2.0 流程完整落盘）。专业前 35%，普通一本；核心经历：省工业设计大赛二等奖（团队建模与原型）、校级大创「适老化智能夜灯」结题、个人作品集网站 30+ 件作品。兴趣锚点：<b>"定义怎么解决问题 + 做出能落地的实物"</b>——纯软件与纯平面方向已被四路证据排除（Q15/Q19/Q6/Q16 交叉）。</p>
+</div>
+
+<h2 class="section">02 专业与行业环境</h2>
+<div class="card">
+  <p><strong>专业基本面</strong>：智能工程与创意设计是"设计 + 工程 + AI"交叉专业——课程横跨三维建模、交互原型、嵌入式基础与设计表达。对位行业：智能硬件产品设计 × 交互/体验设计 × AIGC 内容创作三线交叉带（01 宏观报告 M1）。</p>
+  <p style="margin-top:10px;"><strong>行业基本面（引 01 宏观底座）</strong>：中国工业设计市场 278.4 亿美元（2025，CAGR 8.7%）；国内智能硬件设计服务 480 亿元（CAGR 12%+）；AIGC 核心市场 805.8 亿元（+70%）。<b>三条传导链共同指向</b>：执行型技能贬值、"定义产品 + 驾驭 AI + 软硬融合"的复合能力溢价 35%-50%——本专业的交叉属性正落在升值区。</p>
+  <p style="margin-top:10px;"><strong>政策锚点</strong>：工信部联政法〔2025〕202 号（工业设计×AI）+ 工信部联科〔2025〕279 号（AI+制造、AI 终端）+ 2026 年 AI 眼镜纳入国补——需求与政策双击。</p>
+</div>
+
+<h2 class="section">03 我的职业画像</h2>
+<div class="card">
+  <div id="chartRadar" class="chart"></div>
+  <p class="src-note">评分依据：能力信息问卷（19 题，关键题 12 项）+ 对话补问 4 题，逐项自述依据见第 04 章与《00-问卷与画像.md》；未要求任何证明材料。</p>
+</div>
+
+<h2 class="section">04 能力雷达与证据</h2>
+<div class="card">
+  <table class="data">
+    <tr><th>能力</th><th style="width:70px;">得分</th><th style="width:70px;">置信度</th><th>自述依据（具体到问卷题目）</th></tr>
+    <tr><td>专业技术（智能产品设计）</td><td><b>3.5</b></td><td>高</td><td>Q2 三维建模 4 分；Q15 夜灯从建模到 3D 打印装配独立完成、"改了四版外壳"；嵌入式仅 2 分</td></tr>
+    <tr><td>数据与 AI 素养</td><td><b>3.0</b></td><td>高</td><td>Q2 Python 3 分 + AIGC 4 分；无模型训练/部署自述——定位"熟练使用者"</td></tr>
+    <tr><td>设计与表达</td><td><b>4.0</b></td><td>中</td><td>Q3 省赛二等奖（负责建模与原型）；作品集 30+ 件；补问 E1 爆炸图答辩获胜——缺商业级交付复杂度信息</td></tr>
+    <tr><td>实践与项目</td><td><b>3.5</b></td><td>高</td><td>Q3 大创结题 + 竞赛 + 作品集；无企业实习（Q3 未勾实习）</td></tr>
+    <tr><td>沟通协作</td><td><b>3.0</b></td><td>中</td><td>Q12 混合协作；E1 团队答辩补位；无带人/对客经验</td></tr>
+    <tr><td>行业认知</td><td><b>2.5</b></td><td>中</td><td>Q5 含"暂不确定"；补问 C1 自述"知道画造型和盯手板，不知道定价/CMF/量产轮次"</td></tr>
+  </table>
+  <p class="src-note">评分锚点：1=听说过 2=理解概念 3=指导下完成 4=独立完成常见项目 5=解决复杂问题。依据 = 自述 + 问卷 + 补问，评分是工作性估计而非鉴定。</p>
+</div>
+
+<h2 class="section">05 职业兴趣与价值偏好</h2>
+<div class="card">
+  <p><strong>兴趣证据链（权重高于声明式偏好）</strong>：Q15 主动投入经历——大二暑假自发完成跌倒提醒夜灯（传感器+蜂鸣器+手机通知+3D 打印外壳），"改四版外壳时完全忘记时间"；补问 A2/A3 确认兴趣内核是"想到双提醒方案的瞬间"（定义问题）与"结构调到刚好"（落地实物）双轮驱动。</p>
+  <p style="margin-top:10px;"><strong>原因型分析（Q19）</strong>："真喜欢做实物"（兴趣驱动）+"长坡赛道用得上设计和工程"（趋势驱动）——兴趣主导、趋势辅助的<span class="tag pos">健康组合</span>，区别于纯"听说工资高"的趋势投机者，抗周期性强。</p>
+  <p style="margin-top:10px;"><strong>价值排序（Q8）</strong>：创造性 &gt; 成长 &gt; 城市机会；Q17 专业型生活状态（成为专家）；Q7 中小企业多岗位协作（接触全流程）；Q13 适度冒险。<strong>约束（Q9/Q16）</strong>：不接受单日 10h+ 常态化加班、排斥纯 coding/销售压力/带人——排除纯算法岗与纯管理起步路线；可接受深造 2-3 年（Q10），考研是合法备选。</p>
+</div>
+
+<h2 class="section">06 职业方向探索（候选矩阵 ★）</h2>
+<div class="card">
+  <div id="chartMatrix" class="chart"></div>
+  <p class="src-note">三维评估：当前匹配（对照第 03 章画像）× 行业潜力（对照 01 宏观底座传导链与岗位生态）× 准入门槛（对照第 07 章岗位画像）。</p>
+</div>
+<div class="card">
+  <h3>四航道结论</h3>
+  <table class="data">
+    <tr><th>航道</th><th>方向</th><th>推荐星级</th><th>一句话理由</th></tr>
+    <tr><td class="high">主航道</td><td>智能硬件产品设计师</td><td>★4.5</td><td>兴趣锚点/专业交叉/行业传导链三重对位，大三有 1 年窗口补齐 CMF 与实习</td></tr>
+    <tr><td>副航道</td><td>交互/体验设计师（AI 产品方向）</td><td>★4.0</td><td>需求最稳、作品集迁移成本最低，但离"实物"远——作为切换选项而非首选</td></tr>
+    <tr><td>探索航道</td><td>AIGC 全链路设计师</td><td>★3.5</td><td>增速 +200% 但初级供给过剩；定位为"保底技能+接单副线"，不作为主线</td></tr>
+    <tr><td>新增探索</td><td>创意技术/新媒体艺术</td><td>★3.0</td><td>展览文旅有需求且气质匹配，但项目制收入波动大，列为观察项</td></tr>
+    <tr><td class="low">暂不建议</td><td>AI 应用/算法工程师</td><td>★2.0</td><td>Q16 明确排斥"纯 coding 无设计空间"；Python 3 分距工程岗要求差距 2 档</td></tr>
+    <tr><td class="low">暂不建议</td><td>考公考编（近期主线）</td><td>★2.0</td><td>Q8 创造性第一 + Q17 专业型——与体制内价值结构错位，家庭期待（Q14）需沟通而非顺从</td></tr>
+  </table>
+  <p class="src-note">"除了你想的，还有哪些你该考虑的；你想要的里面，哪些其实不适合你。"</p>
+</div>
+
+<h2 class="section">07 目标职业分析（岗位画像 ★）</h2>
+<div class="card">
+  <h3>岗位画像 A：智能硬件产品设计师（主航道，聚合 JD 高频要求）</h3>
+  <ul style="margin-left:20px;">
+    <li><strong>核心能力（JD 高频前 5）</strong>：① 三维建模与渲染（Rhino/KeyShot/CAD，几乎 100% 出现）② CMF 设计（色彩/材料/工艺，中高级岗位分水岭）③ 结构可行性与供应链协同（量产落地）④ 市场调研与竞品分析 ⑤ 跨团队沟通与设计评审。</li>
+    <li><strong>加分能力</strong>：Arduino/快速原型、AIGC 工作流、iF/红点/省级以上奖项、作品集完整度。</li>
+    <li><strong>准入门槛</strong>：本科+作品集为硬通货；应届进助理岗，中级普遍要求 3-8 年经验。</li>
+    <li><strong>薪酬行情带（挂牌区间，非成交价）</strong>：初级 5-10K / 中级 15-35K / 高级 40-70K（深圳，猎聘 2026）。</li>
+  </ul>
+  <p class="src-note">聚合自 [S3] 深圳工业设计师 JD 样本与 [S5][S6] AI 眼镜厂商招聘背景（检索日 2026-10-03）。</p>
+</div>
+<div class="card">
+  <h3>岗位画像 B：交互/体验设计师——AI 产品方向（副航道）</h3>
+  <ul style="margin-left:20px;">
+    <li><strong>核心能力</strong>：用户研究、交互设计、AIGC 设计能力、业务理解（阿里 AI 体验设计师 JD 同时要求到"AI 体验创新"）。</li>
+    <li><strong>门槛与薪酬</strong>：作品集导向；应届 10-15K，3-5 年经验年薪可达 30 万（上海，职友集/大数跨境 2026）。</li>
+    <li><strong>与画像 A 的关键差异</strong>：产出是"屏幕里的体验"而非"手里的实物"——这正是沈亦航把它放副航道的原因。</li>
+  </ul>
+  <p class="src-note">来源 [S13][S14]（检索日 2026-10-03）。</p>
+</div>
+
+<h2 class="section">08 人岗匹配分析（机会清单）</h2>
+<div class="card">
+  <div id="mapBox" style="width:100%;height:420px;"></div>
+  <p class="src-note">数值依据：2026-09 公开招聘 UI 设计师岗位观察样本（非全量口径）；意向城市为深圳/上海-杭州/苏州（Q4）。</p>
+</div>
+<div class="card">
+  <table class="data">
+    <tr><th style="width:56px;">#</th><th style="width:56px;">城市</th><th style="width:100px;">行业</th><th>企业</th><th style="width:130px;">岗位</th><th style="width:60px;">匹配</th><th style="width:200px;">切入建议</th></tr>
+    <tr><td>1</td><td>深圳</td><td>智能硬件</td><td>安克创新</td><td>工业设计师</td><td class="high">高</td><td>大三实习第一目标；充电储能品类与夜灯原型经验同构 [S3]</td></tr>
+    <tr><td>2</td><td>深圳</td><td>设计服务</td><td>浪尖设计/嘉兰图等头部设计公司</td><td>工业设计师（助理）</td><td class="high">高</td><td>应届最佳入口：多项目高强度训练，2 年后带全链路经验跳品牌方 [S3]</td></tr>
+    <tr><td>3</td><td>杭州</td><td>AI 硬件</td><td>Rokid</td><td>产品设计师/交互设计师</td><td class="high">高</td><td>百镜大战新锐，软硬融合岗位与主航道完全同构 [S6]</td></tr>
+    <tr><td>4</td><td>深圳</td><td>AI 眼镜</td><td>雷鸟创新</td><td>产品设计师/创意技术</td><td><span class="tag mid">中高</span></td><td>新品类缺"场景定义"，竞品拆解作业投作品集 [S5][S6]</td></tr>
+    <tr><td>5</td><td>上海</td><td>医疗器械设计</td><td>索果设计</td><td>工业设计师（医疗方向）</td><td><span class="tag mid">中高</span></td><td>医疗设计增速最快（CAGR 11.2%），夜灯适老化叙事直接迁移 [S12]</td></tr>
+    <tr><td>6</td><td>杭州/上海</td><td>互联网 AI</td><td>阿里巴巴</td><td>AI 体验设计师</td><td><span class="tag mid">中高</span></td><td>副航道入口；要求 AIGC 设计能力——用工作流作品集敲门 [S13]</td></tr>
+    <tr><td>7</td><td>深圳</td><td>跨境电商</td><td>傲基科技</td><td>AIGC 视觉/内容设计</td><td><span class="tag mid">中高</span></td><td>保底通道：出图效率导向，验证商业交付能力 [S3][S4]</td></tr>
+    <tr><td>8</td><td>苏州</td><td>智能制造</td><td>青苔国际工业设计村入驻企业集群</td><td>工业设计师</td><td><span class="tag mid">中高</span></td><td>家乡选项：三年行动计划下 2027 年国家级中心 15 家，政策洼地 [S9]</td></tr>
+    <tr><td>9</td><td>深圳</td><td>消费电子</td><td>TCL/创维</td><td>工业设计师（CMF 方向）</td><td><span class="tag mid">中</span></td><td>CMF 专精路线入口；红点至尊奖团队，先实习再转正 [S6]</td></tr>
+    <tr><td>10</td><td>深圳</td><td>智能家居</td><td>悦孚斯科技</td><td>产品设计师</td><td><span class="tag mid">中</span></td><td>家具×智能化交叉带，竞争相对小 [S3]</td></tr>
+    <tr><td>11</td><td>深圳</td><td>IoT 生态</td><td>小米生态链企业</td><td>产品设计师</td><td><span class="tag mid">中</span></td><td>生态链公司一专多能，与 Q7 偏好吻合 [S3]</td></tr>
+    <tr><td>12</td><td>杭州</td><td>内容/MCN</td><td>漫剧/短视频 MCN（行业扩张中）</td><td>AIGC 全链路设计师</td><td><span class="tag mid">中</span></td><td>两年 30→700 人扩张赛道；仅作保底，警惕初级内卷 [S4]</td></tr>
+    <tr><td>13</td><td>东莞松山湖</td><td>智能终端</td><td>华为终端</td><td>ID 设计师</td><td class="low">低·3-5年目标</td><td>中年目标位而非第一站；需要大厂级项目积累 [S6]</td></tr>
+    <tr><td>14</td><td>北京</td><td>AI 眼镜</td><td>Xreal</td><td>工业设计师</td><td class="low">低·城市错位</td><td>城市非首选（Q4），仅当杭州/深圳机会落空时考虑 [S6]</td></tr>
+    <tr><td>15</td><td>苏州/东莞</td><td>制造配套</td><td>结构件/模具配套企业设计部</td><td>设计工程师</td><td class="low">低·需补结构</td><td>设计转工程后备位；需先补结构工程课程 [S9]</td></tr>
+    <tr><td>16</td><td>深圳</td><td>展览文旅</td><td>展示公司（深圳设计周生态）</td><td>创意技术/新媒体艺术</td><td><span class="tag mid">中</span></td><td>探索航道落地口；项目制，适合在校接单试水 [S10]</td></tr>
+  </table>
+  <p class="src-note">共 16 条，逐条来源编号与 01 宏观报告 [S1]~[S13] 及本报告文末来源清单对应；招聘信息时效性强（检索日 2026-10-03），投递前以企业官方渠道为准。标注"设计公司集群/生态"类为政策可溯源的真实载体，具体企业以当地园区名录为准。</p>
+</div>
+
+<h2 class="section">09 能力差距分析（缺口矩阵 ★）</h2>
+<div class="card">
+  <div id="chartGap" class="chart"></div>
+  <p class="src-note">对照岗位画像 A（主航道）：差距 = 目标要求 − 当前；优先级按"差距 × 岗位权重"排序。</p>
+</div>
+<div class="card">
+  <table class="data">
+    <tr><th>能力项</th><th>当前</th><th>目标岗位要求</th><th>差距</th><th>优先级</th></tr>
+    <tr><td>CMF 与材料工艺</td><td>1.5</td><td>3.5</td><td class="high">−2.0</td><td class="high">高</td></tr>
+    <tr><td>结构可行性与供应链协同</td><td>2.5</td><td>4.0</td><td class="high">−1.5</td><td class="high">高</td></tr>
+    <tr><td>产品定义与用户洞察</td><td>3.0</td><td>4.0</td><td class="high">−1.0</td><td class="high">高</td></tr>
+    <tr><td>跨团队沟通与汇报</td><td>3.0</td><td>4.0</td><td>−1.0</td><td><span class="tag mid">中</span></td></tr>
+    <tr><td>三维建模与渲染</td><td>4.0</td><td>4.5</td><td>−0.5</td><td><span class="tag mid">中</span></td></tr>
+    <tr><td>AIGC 工作流</td><td>4.0</td><td>3.5</td><td class="low">+0.5（优势项）</td><td>保持</td></tr>
+  </table>
+  <p class="src-note"><b>交叉优势结论</b>：你的竞争力不是单一技能，而是"设计表达 × 工程原型 × AIGC 工作流"三位一体——纯设计专业缺工程落地，纯工科缺审美表达，AIGC 原生使用者缺三维功底。缺口矩阵直接驱动第 11-13 章的路径与行动。</p>
+</div>
+
+<h2 class="section">10 我的职业选择（决策论证 ★）</h2>
+<div class="card">
+  <p><strong>为什么选主航道（智能硬件产品设计师）</strong>——四因子交汇论证：<br>
+  ① <b>能力</b>：最强项"建模 4 × 原型落地"正是该岗位核心能力①③的底座，AIGC 4 分是岗位加分项；<br>
+  ② <b>偏好</b>：兴趣锚点"定义问题+做出实物"（补问 A2/A3）与岗位日常工作结构完全同构，Q8 创造性第一在该岗位兑现度最高；<br>
+  ③ <b>现实机会</b>：传导链 1（AI 终端 25 倍爆发、品类缺"场景定义"）+ 深圳设计服务 480 亿市场 + 安克/雷鸟/Rokid 等可溯源招聘带；<br>
+  ④ <b>约束</b>：Q16 排斥纯 coding/带人——该岗位以"实物产出"为核心，不触雷；深圳-苏州均在其城市接受集内。</p>
+  <p style="margin-top:12px;"><strong>为什么副航道是交互/UX 而不是 AIGC</strong>：交互岗与主航道共享作品集与用户洞察能力（切换成本最低），且需求最稳；AIGC 全链路虽增速 +200%，但初级供给过剩（招聘满足率低的另一面是入门者内卷），且产出物是"图与视频"而非"实物"——与兴趣锚点错位，只配当保底。</p>
+  <p style="margin-top:12px;"><strong>为什么暂缓产品经理与考公</strong>：智能产品经理需要跨功能协调与"为别人产出负责"（Q16 明确排斥），且应届无此入口；考公与 Q8/Q17 价值结构错位——家庭期待（Q14"家里希望稳定"）需要的是沟通证据，不是顺从。</p>
+  <p style="margin-top:12px;"><strong>走不通怎么办</strong>：触发条件"大四上结束（2028-01）无任何设计岗 offer 或省奖"→ 切换动作：① 转副航道交互岗投递（作品集复用）；② 启动考研（Q10 允许深造 2-3 年，目标工业设计强校）；③ 接受苏州制造配套带设计工程师位并补结构课程。三者在第 14 章路线树中展开。</p>
+</div>
+
+<h2 class="section">11 3~5 年发展路径（验证期 → 定位期）</h2>
+<div class="timeline">
+  <div class="tl-node"><span class="t">Y1（2026.10-2027.09 · 大三）验证期</span><br><b>目标</b>：验证主航道并攒齐三块敲门砖。<br><b>行动</b>：CMF 系统补课+夜灯产品 3 版 CMF 方案；ComfyUI 商业级工作流 2 套；省工业设计大赛 1 项；深圳/杭州暑期实习投递 30 家。<br><b>验收</b>：≥2 个可展示成果（1 项省奖 或 1 段实习 + 作品集 v2 上线）。<span style="color:#68727f;">对应画像：CMF 缺口、行业认知；对应机会：#1 #2 #4。</span></div>
+  <div class="tl-node"><span class="t">Y2（2027.10-2028.09 · 大四）进入期</span><br><b>目标</b>：秋招拿下主航道 offer。<br><b>行动</b>：秋招主投智能硬件产品设计师（安克/浪尖/雷鸟/Rokid 清单），副投交互岗保底；毕设做软硬结合完整产品（可参赛/可发布）。<br><b>验收</b>：≥2 个对口 offer 或 1 个 offer + 1 项国际/国家级奖项。里程碑：毕业首年薪资 8-12K（设计公司）或 12-18K（品牌方）。<span style="color:#68727f;">对应机会：#1-#6。</span></div>
+  <div class="tl-node"><span class="t">Y3（2028.10-2029.09）成长期：执行者 → 独立贡献者</span><br><b>目标</b>：从助理到独立跟项目。<br><b>行动</b>：独立负责 1-2 个完整产品线的外观+结构协同；系统学 CMF 落地（跟模厂/材料商）；AIGC 工作流引入团队提效。<br><b>验收</b>：≥1 个量产产品署名；薪资进入 15K 档。<span style="color:#68727f;">对应缺口：CMF、供应链。</span></div>
+  <div class="tl-node"><span class="t">Y4（2029.10-2030.09）分化期：不假设必然晋升</span><br><b>目标</b>：按 Y1-Y3 结果分化，三条路线各配触发条件。<br><b>路线 A（专精）</b>：CMF/结构深度强 → 资深工业设计师，冲大厂（华为 ID 岗）；<b>路线 B（定义权）</b>：用户洞察与商业感强 → 转智能产品经理；<b>路线 C（作品资产）</b>：接单与 IP 积累好 → 独立设计工作室。<br><b>触发条件</b>：量产署名 ≥2 且 CMF 获认可 → A；主导过需求定义 → B；副业月入稳定 &gt; 工资 50% → C。</div>
+  <div class="tl-node"><span class="t">Y5（2030.10-2031）定位期</span><br><b>目标</b>：形成"智能硬件产品设计 + 软硬融合 + AI 工作流"的职业身份定位，成为细分品类（AI 终端/适老化智能产品）内有署名代表作的设计师。<br><b>里程碑</b>：资深设计师/产品经理职级，或工作室年营收稳定；在 iF/红点/省级以上奖项上有个人署名作品。</div>
+</div>
+
+<h2 class="section">12 年度目标与验收指标</h2>
+<div class="card">
+  <table class="data">
+    <tr><th>年度</th><th>北极星目标</th><th>可验收指标</th></tr>
+    <tr><td>Y1（大三）</td><td>敲门砖齐备</td><td>省奖 ≥1、暑期实习 ≥1、作品集 v2（3 个深度项目）、六级通过</td></tr>
+    <tr><td>Y2（大四）</td><td>进入行业</td><td>对口 offer ≥2 或 1 offer+1 奖项；毕设完整产品 1 件</td></tr>
+    <tr><td>Y3</td><td>独立贡献</td><td>量产署名 ≥1、薪资 15K 档、CMF 落地案例 ≥3 个</td></tr>
+    <tr><td>Y4</td><td>路线分化落地</td><td>按触发条件进入 A/B/C 之一，且有 6 个月以上验证</td></tr>
+    <tr><td>Y5</td><td>职业身份定位</td><td>个人署名获奖作品 ≥1、细分品类代表作 ≥1</td></tr>
+  </table>
+  <p class="src-note">每个指标可回溯到第 04 章画像与第 09 章缺口矩阵，形成"短板 → 行动 → 里程碑"闭环。</p>
+</div>
+
+<h2 class="section">13 近期行动计划（90 天表 ★）</h2>
+<div class="card">
+  <table class="data">
+    <tr><th style="width:44px;">#</th><th>行动</th><th>对应缺口</th><th>验收标准</th><th style="width:110px;">截止</th></tr>
+    <tr><td>1</td><td>CMF 系统补课：每周 1 章 CMF 教程 + 拆解 2 款在售新品（材料/工艺/表面处理逆向分析），共 8 款</td><td>CMF（−2.0）</td><td>8 篇拆解笔记 + 夜灯产品 3 版 CMF 改良方案</td><td>3 个月内</td></tr>
+    <tr><td>2</td><td>ComfyUI 商业工作流：搭建电商产品图工作流 2 套</td><td>保底技能变现</td><td>交付级出图 20 张，尝试接首单（猪八戒/站酷）</td><td>2 个月内</td></tr>
+    <tr><td>3</td><td>作品集 v2：夜灯大创 + 省赛作品 + 1 个新品类概念（AI 眼镜配镜场景）做深度 case</td><td>求职硬通货</td><td>上线站酷/个人站，3 个项目含爆炸图与落地证据</td><td>2.5 个月内</td></tr>
+    <tr><td>4</td><td>报名 2027 年省工业设计大赛 + 校级选拔</td><td>信用背书</td><td>完成报名与组队，出 1 版概念方案</td><td>1 个月内</td></tr>
+    <tr><td>5</td><td>暑期实习清单：深圳/杭州目标 30 家（安克、浪尖、雷鸟、Rokid、索果等），分层投递</td><td>实习空白</td><td>简历+作品集投出，拿到 ≥3 个面试</td><td>3 个月内启动</td></tr>
+    <tr><td>6</td><td>行业认知校准：约谈 2 位在职产品设计师（校友/领英），问"一周时间表+最意外的麻烦"</td><td>行业认知（2.5）</td><td>2 篇访谈笔记，更新第 07 章岗位画像</td><td>2 个月内</td></tr>
+    <tr><td>7</td><td>英语六级备考（12 月场）</td><td>大厂门槛</td><td>≥450 分</td><td>3 个月内</td></tr>
+  </table>
+  <p class="src-note">粒度标准：每条"本周就能开始做"；禁止"提升综合素质"类条目。</p>
+</div>
+
+<h2 class="section">14 备选路线与风险（路线树 ★）</h2>
+<div class="route-tree">
+  <div class="rt-root">主航道：智能硬件产品设计师（Y2 秋招）</div>
+  <div class="rt-row">
+    <div class="rt-cond">触发：2028-01 前无设计岗 offer 且无省奖</div>
+    <div class="rt-act"><b>切副航道</b>：交互/体验设计岗投递（作品集复用 60%），同步补 2 个 UX 深度 case → 保留资产：用户洞察+原型；补：可用性测试方法</div>
+  </div>
+  <div class="rt-row">
+    <div class="rt-cond">触发：副航道 3 个月仍无 offer，或家庭经济压力上升</div>
+    <div class="rt-act"><b>保底航道</b>：AIGC 全链路设计师/电商内容岗（#7 #12）即时就业 + 业余接单；保留资产：AIGC 工作流 4 分；18 个月后带着"商业交付经验"再战设计岗</div>
+  </div>
+  <div class="rt-row">
+    <div class="rt-cond">触发：确认热爱研究、接受推迟就业（Q10 允许）</div>
+    <div class="rt-act"><b>深造路线</b>：考研工业设计/交互设计强校；保留资产：作品集+竞赛；补：设计研究方法——毕业后入口上移至品牌方设计中心</div>
+  </div>
+  <div class="rt-row">
+    <div class="rt-cond">触发：深圳/杭州生活成本压力或家庭需要</div>
+    <div class="rt-act"><b>地理备选</b>：苏州制造配套带（#8 #15）设计工程师/设计师——家乡+政策洼地（三年行动计划），离上海机会圈高铁 30 分钟</div>
+  </div>
+</div>
+<div class="card neg" style="margin-top:14px;">
+  <span class="tag neg">风险</span>① AI 眼镜等新品类若"杀手级场景"迟迟未现，行业会经历洗牌（里斯报告明确提示）——对冲：能力锚在"产品定义+软硬融合"通用层而非单一品类；② AIGC 工具迭代极快，工作流可能半年过时——对冲：把学习成本压在"审美判断与业务理解"这类慢变量上。
+</div>
+
+<h2 class="section">15 慎入/不建议方向</h2>
+<div class="card neg"><span class="tag neg">慎入</span><b>AI 应用/算法工程师</b>：Q16 明确排斥"纯 coding 无设计空间"；Python 3 分距岗位要求差 2 档；且算法岗普遍硕士起步——双门槛均不过。若未来兴趣迁移，须先自测"连续 3 个月纯写代码是否仍有成就感"。</div>
+<div class="card neg"><span class="tag neg">慎入</span><b>智能产品经理（应届直接做）</b>：无应届入口（普遍内部转岗或 3-5 年设计/工程经验）；且需要"为别人产出负责"（Q16 排斥）。正确姿势：按 Y4 路线 B 自然演化，而非毕业强转。</div>
+<div class="card neg"><span class="tag neg">不建议</span><b>考公考编作为近期主线</b>：与 Q8"创造性第一"、Q17"专业型"价值结构系统性错位；家庭期待（Q14）建议用本报告第 10 章论证与家人做一次正式沟通，而非沉默顺从或对抗。</div>
+<div class="card neg"><span class="tag neg">不建议</span><b>毕业首年全职自由职业</b>：自由职业收入波动大且培训市场口径（月入 1-3 万）含水（01 报告 [S4] 已降级标注）；先在组织内完成 Y3 的能力闭环，把接单当练手而非主业。</div>
+
+<h2 class="section">16 总结（含数据与来源附录）</h2>
+<div class="card">
+  <p>这份规划的核心判断只有一句话：<b>站在"产品定义与结构落地之间的翻译层"，吃 AI 终端品类爆发的场景定义红利。</b>它不是来自"智能硬件听起来有前景"，而是四路证据的交汇——兴趣锚点（夜灯项目的"定义+落地"双轮）、能力结构（建模 4×原型×AIGC 的交叉优势）、行业传导链（执行贬值/定义升值）、可溯源机会带（深圳 480 亿设计服务市场 + 百镜大战新锐）。同样重要的是"不做什么"：不碰纯 coding、不应届强转管理、不把考公当避风港、不全职接单。</p>
+  <p style="margin-top:10px;">规划的分量在 90 天：第 13 章的 7 条行动，每一条都能在下周一开始。三个月后回看，CMF 缺口、作品集 v2、实习清单三件事的进度，就是这份规划书是否"活了"的检验标准。</p>
+  <p style="margin-top:10px;font-size:13px;color:#68727f;">本规划书不构成唯一建议；重大决策请与家人/导师商议。数据时效：检索日 2026-10-03，6 个月内有效。</p>
+</div>
+
+<h2 class="section">附录：来源清单</h2>
+<ol class="sources">
+  <li>[S3] 深圳 2026 年工业设计师招聘概况（安克创新/傲基/悦孚斯等企业岗位与薪资带），爱企查/猎聘，检索 2026-10-03</li>
+  <li>[S4] AIGC 设计岗位数据（需求增速/缺口/薪资带；漫剧团队扩张案例；全链路人才满足率不足三成），上海教育宝转引行业统计（权威性中等），检索 2026-10-03</li>
+  <li>[S5] 《2026 全球 AI 眼镜行业战略洞察报告》（出货 25 倍/品类缺场景定义），里斯战略咨询，2026-09</li>
+  <li>[S6] AI 眼镜产业链与厂商动态（雷鸟/Rokid/Xreal/华为/海信/创维/TCL 等），招商证券行业报告/澎湃新闻/央视网，2026-01~09</li>
+  <li>[S9] 苏州市大力培育工业设计产业发展三年行动计划（2025-2027），苏州市人民政府，2025-05</li>
+  <li>[S10] 深圳"设计之都"官方口径数据（设计师 22 万+/工业设计机构 2.2 万家/iF 红点 13 连冠），百度百科词条，检索 2026-10-03</li>
+  <li>[S12] 工业设计就业环境观察（岗位结构变化）与上海索果设计（医疗器械设计）公司业务介绍，索果设计官网/转载，检索 2026-10-03</li>
+  <li>[S13] 设计岗位城市分布与阿里 AI 体验设计师四城同招观察，优漫教育（招聘观察，非全量口径），2026-09</li>
+  <li>[S14] UI/UX 设计师城市薪资数据（职友集/大数跨境汇总），检索 2026-10-03</li>
+  <li class="unverified">[S15] 自由职业接单收入（月入 1-3 万）、AIGC 缺口 200 万等培训市场口径——非权威，仅作方向参考</li>
+  <li>企业名录类条目（浪尖设计/嘉兰图等）为行业公知真实企业，岗位以当期官方招聘渠道为准。</li>
+</ol>
+<p class="src-note" style="text-align:center;margin-top:20px;">报告链位置：02 个人规划书（上游依赖：01 宏观调研报告 + 底座结论.md 14 节；画像依据：00-问卷与画像.md）</p>
+
+</div>
+
+<script>
+// 硬性规则：① animation:false ② 本地 echarts 优先 ③ 每个 id 有对应容器 ④ 统一登记 window.__charts
+const ANIM = false;
+window.__charts = window.__charts || [];
+
+function mk(id, opt){
+  const el = document.getElementById(id);
+  if (!el || typeof echarts === 'undefined') {
+    if (el) el.innerHTML = '<p style="color:#9E9E9E;padding:40px;">图表加载失败：未找到 echarts.min.js。</p>';
+    return null;
+  }
+  opt.animation = ANIM;
+  const c = echarts.init(el);
+  c.setOption(opt);
+  window.__charts.push(c);
+  return c;
+}
+
+function resizeAll(forPrint){
+  window.__charts.forEach(function(c){
+    if (c.__chinaMap) { c.resize({width:'auto',height:'auto'}); }
+    else { c.resize({width:'auto',height: forPrint ? 300 : 'auto'}); }
+  });
+}
+window.addEventListener('resize', function(){ resizeAll(false); });
+window.addEventListener('beforeprint', function(){ resizeAll(true); });
+
+window.addEventListener('DOMContentLoaded', function(){
+
+  // 六维雷达：当前 vs Y3 目标（数据来自 00-问卷与画像.md B3）
+  mk('chartRadar', {
+    color:['#1F3A5F','#D9A441'],
+    tooltip:{},
+    legend:{ bottom:0, data:['当前画像','Y3 目标'] },
+    radar:{
+      indicator:[
+        {name:'专业技术',max:5},{name:'数据与AI素养',max:5},{name:'设计与表达',max:5},
+        {name:'实践与项目',max:5},{name:'沟通协作',max:5},{name:'行业认知',max:5}
+      ],
+      radius:'62%', splitLine:{lineStyle:{color:'#DDE4EF'}},
+      axisLine:{lineStyle:{color:'#DDE4EF'}},
+      splitArea:{areaStyle:{color:['#FFFFFF','#F6F8FC']}}
+    },
+    series:[{type:'radar', areaStyle:{opacity:.15},
+      data:[{value:[3.5,3.0,4.0,3.5,3.0,2.5], name:'当前画像'},
+            {value:[4.5,4.0,4.5,4.5,4.0,4.0], name:'Y3 目标'}],
+      label:{show:true}}]
+  });
+
+  // 四航道矩阵：星级水平条
+  mk('chartMatrix', {
+    tooltip:{},
+    grid:{ left:190, right:60, top:10, bottom:30 },
+    xAxis:{ type:'value', max:5, name:'推荐星级' },
+    yAxis:{ type:'category', data:['AI应用/算法工程师','考公考编(近期)','创意技术/新媒体','AIGC 全链路','交互/UX(AI方向)','智能硬件产品设计师'] },
+    series:[{
+      type:'bar', barWidth:'55%',
+      data:[
+        {value:2.0, itemStyle:{color:'#1E5631'}},
+        {value:2.0, itemStyle:{color:'#1E5631'}},
+        {value:3.0, itemStyle:{color:'#D9A441'}},
+        {value:3.5, itemStyle:{color:'#D9A441'}},
+        {value:4.0, itemStyle:{color:'#2b56c9'}},
+        {value:4.5, itemStyle:{color:'#C0392B'}}
+      ],
+      label:{show:true, position:'right', formatter:function(p){return '★'+p.value;}}
+    }]
+  });
+
+  // 缺口矩阵：当前 vs 岗位要求
+  mk('chartGap', {
+    tooltip:{ trigger:'axis' },
+    legend:{ bottom:0 },
+    grid:{ left:170, right:50, top:30, bottom:60 },
+    xAxis:{ type:'value', max:5 },
+    yAxis:{ type:'category', data:['AIGC 工作流','三维建模与渲染','跨团队沟通','产品定义与洞察','结构/供应链','CMF 与材料工艺'] },
+    series:[
+      { name:'当前', type:'bar', barWidth:'32%', data:[4.0,4.0,3.0,3.0,2.5,1.5], itemStyle:{color:'#1F3A5F'}, label:{show:true} },
+      { name:'岗位要求', type:'bar', barWidth:'32%', data:[3.5,4.5,4.0,4.0,4.0,3.5], itemStyle:{color:'#D9A441'}, label:{show:true} }
+    ]
+  });
+
+  // 城市机会地图
+  ChinaMap.render('mapBox', {
+    data: [
+      { name:'深圳市', value:55 },
+      { name:'广州市', value:45 },
+      { name:'上海市', value:44 },
+      { name:'北京市', value:34 },
+      { name:'杭州市', value:20 }
+    ]
+  });
+
+});
+</script>
+</body>
+</html>

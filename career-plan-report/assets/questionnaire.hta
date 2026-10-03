@@ -1,0 +1,328 @@
+﻿<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>能力信息问卷</title>
+<hta:application id="qapp" border="thin" caption="yes" maximizebutton="no" showintaskbar="yes" scroll="yes" icon="mshta.exe" />
+<script language="javascript" src="questionnaire-core.js"></script>
+<style>
+  body { font-family:"Microsoft YaHei",simhei,sans-serif; background:#FAF7F2; color:#2B2B2B; line-height:1.7; margin:0; padding:20px; }
+  .wrap { max-width:740px; margin:0 auto; }
+  h1 { font-size:20px; color:#8B1A1A; margin:0 0 4px 0; }
+  .sub { color:#8A8A8A; font-size:12px; margin-bottom:14px; }
+  .meta { background:#FFFFFF; padding:10px 14px; margin-bottom:14px; font-size:12px; color:#666666; }
+  .q { background:#FFFFFF; padding:16px 18px; margin-bottom:12px; border-left:4px solid #8B1A1A; }
+  .q h2 { font-size:14px; margin:0 0 4px 0; }
+  .req { color:#C0392B; font-size:12px; margin-left:6px; }
+  .key { color:#B26A00; font-size:12px; margin-left:6px; }
+  .tip { font-size:12px; color:#8A8A8A; margin-bottom:8px; }
+  .opt { display:block; margin:5px 0; font-size:13px; }
+  .other { width:96%; padding:6px 8px; border:1px solid #D9D2C7; font-size:13px; margin-top:8px; }
+  .txt { width:96%; padding:6px 8px; border:1px solid #D9D2C7; font-size:13px; margin-top:6px; }
+  .sc { width:44px; padding:2px 4px; }
+  .note { background:#FFFFFF; padding:12px 16px; margin-bottom:12px; font-size:12px; color:#666666; border-left:4px solid #D9D2C7; }
+  .btn { padding:10px 22px; border:0; font-size:14px; cursor:pointer; }
+  .btn-main { background:#8B1A1A; color:#FFFFFF; font-weight:bold; }
+  .btn-minor { background:#FFFFFF; color:#666666; border:1px solid #CCCCCC; font-size:12px; padding:8px 14px; margin-left:8px; }
+  #status { font-size:13px; min-height:20px; margin:8px 0; color:#1E5631; }
+  #done { display:none; background:#EFF5F0; border:2px solid #1E5631; padding:20px; margin-bottom:18px; }
+  #done h2 { color:#1E5631; font-size:16px; margin:0 0 10px 0; }
+  #done .step { background:#FFFFFF; padding:10px 12px; margin:8px 0; font-size:13px; }
+  code { background:#F5F0E6; padding:2px 6px; color:#8B1A1A; font-family:Consolas,monospace; }
+  #fallbackWrap { display:none; background:#FFF3CD; border:1px solid #E6D9A8; padding:14px; margin-bottom:18px; }
+  #fallbackBox { width:96%; height:150px; font-family:Consolas,monospace; font-size:12px; }
+  .warn { color:#B26A00; }
+</style>
+</head>
+<body onload="init()">
+<div class="wrap">
+  <h1 id="pageTitle">能力信息问卷</h1>
+  <div class="sub">题目来自同目录的问卷模板（.md）。填完点最下方红色按钮，答案会写回同一个文件夹，无需复制粘贴。</div>
+  <div id="status"></div>
+  <div class="meta" id="metaBox"></div>
+
+  <div id="done">
+    <h2>提交成功！答案已写回本文件夹</h2>
+    <div class="step">1. 已填写问卷（可直接阅读）：<code id="doneMd"></code></div>
+    <div class="step">2. 结构化答案（供 Agent 解析）：<code id="doneJson"></code></div>
+    <div class="step">3. 请回到 Agent 对话窗口，发送：<br><br><code>问卷已提交，请读取已填写问卷 MD 开始分析</code></div>
+    <div class="step">4. 可直接关闭本窗口。
+      <button class="btn btn-minor" onclick="closeWin()">关闭窗口</button>
+      <button class="btn btn-minor" onclick="openFolder()">打开所在文件夹</button>
+    </div>
+  </div>
+
+  <div id="fallbackWrap">
+    <b>自动写盘被系统拦住了</b>（少见情况）。请点下面的按钮复制答案，回到 Agent 对话直接粘贴发送：
+    <br><br>
+    <textarea id="fallbackBox" readonly></textarea>
+    <br><br>
+    <button class="btn btn-minor" onclick="copyFallback()">复制答案到剪贴板</button>
+    <span id="copyMsg"></span>
+  </div>
+
+  <div id="form"></div>
+
+  <div style="margin:18px 0 30px 0">
+    <button class="btn btn-main" onclick="submitAnswers()">提交给 Agent</button>
+    <button class="btn btn-minor" onclick="saveDraft()">保存草稿</button>
+    <button class="btn btn-minor" onclick="loadDraft()">恢复草稿</button>
+  </div>
+</div>
+
+<script language="javascript">
+/* ============================================================
+   问卷交互壳（HTA）
+   - 题目：从同目录问卷模板 MD 读取（QCore.parseTemplate）
+   - 交互：动态渲染 填空 / 单选 / 多选(可打分)
+   - 提交：QCore.serializeFilled → <模板名>-已填写.md
+           QCore.toJson          → answers-auto.json
+   ============================================================ */
+
+var MODEL = null;
+var TEMPLATE_FILE = "";
+var DRAFT_FILE = "questionnaire-draft.json";
+var OUT_JSON = "answers-auto.json";
+
+function $(id) { return document.getElementById(id); }
+function esc(s) {
+  return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function baseDir() {
+  var p = location.pathname;
+  try { p = decodeURIComponent(p); } catch (e) { try { p = unescape(p); } catch (e2) {} }
+  p = p.replace(/\//g, "\\");
+  if (p.charAt(0) === "\\") { p = p.substring(1); }
+  var i = p.lastIndexOf("\\");
+  return p.substring(0, i + 1);
+}
+
+function writeText(fileName, text) {
+  var s = new ActiveXObject("ADODB.Stream");
+  s.Type = 2;
+  s.Charset = "utf-8";
+  s.Open();
+  s.WriteText(text);
+  s.SaveToFile(baseDir() + fileName, 2);
+  s.Close();
+}
+
+function readText(fileName) {
+  var s = new ActiveXObject("ADODB.Stream");
+  s.Type = 2;
+  s.Charset = "utf-8";
+  s.Open();
+  try { s.LoadFromFile(baseDir() + fileName); } catch (e) { s.Close(); return null; }
+  var t = s.ReadText(-1);
+  s.Close();
+  return QCore.stripBom(t);
+}
+
+function findTemplate() {
+  var fso = new ActiveXObject("Scripting.FileSystemObject");
+  var folder = fso.GetFolder(baseDir());
+  var files = new Enumerator(folder.Files);
+  var best = "";
+  for (; !files.atEnd(); files.moveNext()) {
+    var n = files.item().Name;
+    if (/\.md$/i.test(n)) {
+      if (n === "00-问卷模板.md") { return n; }
+      if (n.indexOf("问卷模板") >= 0 && n.indexOf("已填写") < 0) { best = n; }
+    }
+  }
+  return best;
+}
+
+function render(model) {
+  var html = [];
+  for (var i = 0; i < model.questions.length; i++) {
+    var q = model.questions[i];
+    if (q.type === "note") {
+      if (q.title && q.title.indexOf("补充说明") < 0) {
+        html.push('<div class="note">' + esc(q.title) + (q.tip ? "：" + esc(q.tip) : "") + '</div>');
+      }
+      continue;
+    }
+    var badge = "";
+    if (q.required) { badge += '<span class="req">*必填</span>'; }
+    if (q.key) { badge += '<span class="key">关键</span>'; }
+    html.push('<div class="q" id="q_' + i + '">');
+    html.push('<h2>' + esc(q.title) + badge + '</h2>');
+    if (q.tip) { html.push('<div class="tip">' + esc(q.tip) + '</div>'); }
+
+    if (q.type === "text") {
+      html.push('<input class="txt" id="t_' + i + '" value="">');
+    } else {
+      for (var o = 0; o < q.options.length; o++) {
+        var op = q.options[o];
+        var ctl = (q.type === "multi") ? "checkbox" : "radio";
+        html.push('<label class="opt"><input type="' + ctl + '" name="g' + i + '" value="' + esc(op.name) + '"> ' + esc(op.name));
+        if (op.score) {
+          html.push(' <span style="margin-left:8px">分 <input type="number" min="1" max="5" class="sc" id="s_' + i + '_' + o + '"></span>');
+        }
+        html.push('</label>');
+      }
+    }
+    html.push('<input class="other" id="o_' + i + '" placeholder="其他（自由填写）">');
+    html.push('</div>');
+  }
+  $("form").innerHTML = html.join("");
+}
+
+function collect() {
+  var answers = {};
+  for (var i = 0; i < MODEL.questions.length; i++) {
+    var q = MODEL.questions[i];
+    if (q.type === "note") { continue; }
+    var entry = { type: q.type };
+    if (q.type === "text") {
+      entry.text = $("t_" + i) ? $("t_" + i).value : "";
+    } else {
+      entry.selected = [];
+      entry.scores = {};
+      var boxes = document.getElementsByName("g" + i);
+      for (var o = 0; o < q.options.length; o++) {
+        var op = q.options[o];
+        if (boxes[o] && boxes[o].checked) {
+          entry.selected.push(op.name);
+          if (op.score) {
+            var sc = $("s_" + i + "_" + o);
+            if (sc && sc.value) { entry.scores[op.name] = sc.value; }
+          }
+        }
+      }
+      entry.other = $("o_" + i) ? $("o_" + i).value : "";
+    }
+    answers[q.title] = entry;
+  }
+  return answers;
+}
+
+function applyDraft(d) {
+  if (!d) { return; }
+  for (var i = 0; i < MODEL.questions.length; i++) {
+    var q = MODEL.questions[i];
+    var a = d[q.title];
+    if (!a) { continue; }
+    if (q.type === "text") {
+      if (a.text && $("t_" + i)) { $("t_" + i).value = a.text; }
+      continue;
+    }
+    var boxes = document.getElementsByName("g" + i);
+    for (var o = 0; o < q.options.length; o++) {
+      var op = q.options[o];
+      if (a.selected) {
+        for (var k = 0; k < a.selected.length; k++) {
+          if (a.selected[k] === op.name && boxes[o]) { boxes[o].checked = true; }
+        }
+      }
+      if (op.score && a.scores && a.scores[op.name]) {
+        var sc = $("s_" + i + "_" + o);
+        if (sc) { sc.value = a.scores[op.name]; }
+      }
+    }
+    if (a.other && $("o_" + i)) { $("o_" + i).value = a.other; }
+  }
+}
+
+function stamp() {
+  var d = new Date();
+  function p(n) { return (n < 10 ? "0" : "") + n; }
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+}
+
+function submitAnswers() {
+  var answers = collect();
+  var missing = QCore.validate(MODEL, answers);
+  if (missing.length > 0) {
+    $("status").innerHTML = "<span class='warn'>还有必填项未完成：" + esc(missing.join(" / ")) + "</span>";
+    window.scrollTo(0, 0);
+    return;
+  }
+  var ts = stamp();
+  var filledMd = QCore.serializeFilled(MODEL, answers, ts);
+  var json = JSON.stringify(QCore.toJson(MODEL, answers, ts), null, 2);
+  var outMd = TEMPLATE_FILE.replace(/\.md$/i, "") + "-已填写.md";
+  try {
+    writeText(outMd, filledMd);
+    writeText(OUT_JSON, json);
+    $("doneMd").innerHTML = esc(baseDir() + outMd);
+    $("doneJson").innerHTML = esc(baseDir() + OUT_JSON);
+    $("form").style.display = "none";
+    $("done").style.display = "block";
+    $("status").innerHTML = "";
+    window.scrollTo(0, 0);
+  } catch (e) {
+    $("fallbackBox").value = filledMd;
+    $("fallbackWrap").style.display = "block";
+    $("status").innerHTML = "<span class='warn'>自动写盘失败：" + esc(e.message) + "</span>";
+    window.scrollTo(0, 0);
+  }
+}
+
+function saveDraft() {
+  try {
+    writeText(DRAFT_FILE, JSON.stringify(collect(), null, 2));
+    $("status").innerHTML = "草稿已保存（" + DRAFT_FILE + "）";
+  } catch (e) {
+    $("status").innerHTML = "<span class='warn'>草稿保存失败：" + esc(e.message) + "</span>";
+  }
+}
+
+function loadDraft() {
+  var raw = readText(DRAFT_FILE);
+  if (!raw) { $("status").innerHTML = "<span class='warn'>没有找到草稿文件</span>"; return; }
+  var d = null;
+  try { d = eval("(" + raw + ")"); } catch (e) { $("status").innerHTML = "<span class='warn'>草稿解析失败</span>"; return; }
+  applyDraft(d);
+  $("status").innerHTML = "草稿已恢复";
+}
+
+function copyFallback() {
+  try {
+    window.clipboardData.setData("Text", $("fallbackBox").value);
+    $("copyMsg").innerHTML = " 已复制，请回到 Agent 对话粘贴发送。";
+  } catch (e) {
+    $("fallbackBox").select();
+    $("copyMsg").innerHTML = " 请按 Ctrl+C 复制。";
+  }
+}
+
+function openFolder() {
+  try {
+    var sh = new ActiveXObject("WScript.Shell");
+    sh.Run("explorer.exe \"" + baseDir() + "\"", 1, false);
+  } catch (e) {}
+}
+
+function closeWin() { window.close(); }
+
+function init() {
+  var tpl = findTemplate();
+  if (!tpl) {
+    $("status").innerHTML = "<span class='warn'>未找到问卷模板 MD：请确认同目录存在 00-问卷模板.md</span>";
+    return;
+  }
+  TEMPLATE_FILE = tpl;
+  var md = null;
+  try { md = readText(tpl); } catch (e) {
+    $("status").innerHTML = "<span class='warn'>读取模板失败：" + esc(e.message) + "</span>";
+    return;
+  }
+  MODEL = QCore.parseTemplate(md);
+  var qn = 0;
+  for (var i = 0; i < MODEL.questions.length; i++) { if (MODEL.questions[i].type !== "note") { qn++; } }
+  if (MODEL.title) { $("pageTitle").innerHTML = esc(MODEL.title); }
+  var metaHtml = [];
+  for (var m = 0; m < MODEL.meta.length; m++) {
+    if (MODEL.meta[m].key) { metaHtml.push(esc(MODEL.meta[m].key) + "：" + esc(MODEL.meta[m].value)); }
+  }
+  metaHtml.push("题量：" + qn + " 题（模板：" + esc(tpl) + "）");
+  $("metaBox").innerHTML = metaHtml.join("<br>");
+  render(MODEL);
+  $("status").innerHTML = "已加载模板，共 " + qn + " 题。填写完成后点最下方红色按钮。";
+}
+</script>
+</body>
+</html>
